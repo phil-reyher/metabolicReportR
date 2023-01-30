@@ -419,7 +419,6 @@ ggsave("multipage.pdf", ex_plotlist, width = 11, height = 8.5, units = "in")
 
 
 
-%>% 
 
 biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
             x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
