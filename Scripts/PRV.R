@@ -298,52 +298,60 @@ changepoints <- lapply(test_data_10bin, function(df){
   ##VT1##
   ##V-Slope##
   vslop <- df_vt1 %>% select(VO2_ABS,VCO2) %>% as.matrix(.) %>% t(.)
-  vt1_vslop_i <- findchangepts_std(vslop)+vt1_i_beg-1
+  VT1_VSLOP_I <- findchangepts_std(vslop)+vt1_i_beg-1
   #EXCO2##
   exco2 <- df_vt1 %>% select(EXCO2) %>% as.matrix(.) %>% t(.)
-  vt1_exco2_i <- findchangepts_std(exco2)+vt1_i_beg-1
+  VT1_EXCO2_I <- findchangepts_std(exco2)+vt1_i_beg-1
   ##VT2##
   ##V-Slope##
   vslop2 <- df_vt2 %>% select(VCO2,VE) %>% as.matrix(.) %>% t(.)
-  vt2_vslop_i <- findchangepts_std(vslop2)+vt2_i_beg-1
+  VT2_VSLOP_I <- findchangepts_std(vslop2)+vt2_i_beg-1
   ##EXVE##
   exve <- df_vt2 %>% select(EXVE) %>% as.matrix(.) %>% t(.)
-  vt2_exve_i <- findchangepts_std(exve)+vt2_i_beg-1
+  VT2_EXVE_I <- findchangepts_std(exve)+vt2_i_beg-1
   ##combine
-  vt1_i <- round((vt1_exco2_i+vt1_vslop_i)/2)
-  vt2_i <- round((vt2_exve_i+vt2_vslop_i)/2)
-  vt1 <- df$TIME_S[vt1_i]
-  vt2 <- df$TIME_S[vt2_i]
-  df <- data.frame(vt1_exco2_i, vt1_vslop_i,vt2_exve_i, vt2_vslop_i,vt1_i,vt2_i,
-                   vt1,vt2)
+  VT1_I <- round((VT1_EXCO2_I+VT1_VSLOP_I)/2)
+  VT2_I <- round((VT2_EXVE_I+VT2_VSLOP_I)/2)
+  VT1 <- df$TIME_S[VT1_I]
+  VT2 <- df$TIME_S[VT2_I]
+  VT1_VO2 <- df$VO2_ABS[VT1_I]
+  VT2_VO2 <- df$VO2_ABS[VT2_I]
+  df <- data.frame(VT1_EXCO2_I, VT1_VSLOP_I,VT2_EXVE_I, VT2_VSLOP_I,VT1_I,VT2_I,
+                   VT1,VT2,VT1_VO2,VT2_VO2)
   df
     })
+
+mapply(df = test_data, cp = changepoints, FUN = function(df,cp){
+  
+  perc <- cp$VT2_VO2/max(df$VO2_ABS)
+  
+})
 
 plist_cps <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
                FUN = function(df,vt){
   exco2 <- ggplot(df, aes(x=TIME_S))+
     geom_point(aes(y=EXCO2),colour='blue')+
-    geom_vline(xintercept = df$TIME_S[vt$vt1_exco2_i], colour='green')+
-    annotate(x=df$TIME_S[vt$vt1_exco2_i],y=+Inf,
-    label=paste0("VT1=",df$TIME_S[vt$vt1_exco2_i]," s"),vjust=2,geom="label")
+    geom_vline(xintercept = df$TIME_S[vt$VT1_EXCO2_I], colour='green')+
+    annotate(x=df$TIME_S[vt$VT1_EXCO2_I],y=+Inf,
+    label=paste0("VT1=",df$TIME_S[vt$VT1_EXCO2_I]," s"),vjust=2,geom="label")
   
   vslop1 <- ggplot(df, aes(x=VO2_ABS))+
     geom_point(aes(y=VCO2),colour='blue')+
-    geom_vline(xintercept = df$VO2_ABS[vt$vt1_vslop_i], colour='green')+
-    annotate(x=df$VO2_ABS[vt$vt1_vslop_i],y=+Inf,
-    label=paste0("VT1=",df$TIME_S[vt$vt1_vslop_i]," s"),vjust=2,geom="label")
+    geom_vline(xintercept = df$VO2_ABS[vt$VT1_VSLOP_I], colour='green')+
+    annotate(x=df$VO2_ABS[vt$VT1_VSLOP_I],y=+Inf,
+    label=paste0("VT1=",df$TIME_S[vt$VT1_VSLOP_I]," s"),vjust=2,geom="label")
   
   exve <- ggplot(df, aes(x=TIME_S))+
     geom_point(aes(y=EXVE),colour='blue')+
-    geom_vline(xintercept = df$TIME_S[vt$vt2_exve_i], colour='green')+
-    annotate(x=df$TIME_S[vt$vt2_exve_i],y=+Inf,
-    label=paste0("VT1=",df$TIME_S[vt$vt2_exve_i]," s"),vjust=2,geom="label")
+    geom_vline(xintercept = df$TIME_S[vt$VT2_EXVE_I], colour='green')+
+    annotate(x=df$TIME_S[vt$VT2_EXVE_I],y=+Inf,
+    label=paste0("VT2=",df$TIME_S[vt$VT2_EXVE_I]," s"),vjust=2,geom="label")
   
   vslop2 <- ggplot(df, aes(x=VCO2))+
     geom_point(aes(y=VE),colour='blue')+
-    geom_vline(xintercept = df$VCO2[vt$vt2_vslop_i], colour='green')+
-    annotate(x=df$VCO2[vt$vt2_vslop_i],y=+Inf,
-    label=paste0("VT1=",df$TIME_S[vt$vt2_vslop_i]," s"),vjust=2,geom="label")
+    geom_vline(xintercept = df$VCO2[vt$VT2_VSLOP_I], colour='green')+
+    annotate(x=df$VCO2[vt$VT2_VSLOP_I],y=+Inf,
+    label=paste0("VT2=",df$TIME_S[vt$VT2_VSLOP_I]," s"),vjust=2,geom="label")
   
   bigplot <- ggplot(df, aes(x=TIME_S))+
     coord_cartesian(xlim = c(300, 1100),ylim = c(17.5,45))+
@@ -351,13 +359,13 @@ plist_cps <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
     geom_point(aes(y=VE_VO2), colour='blue')+
     #geom_line(aes(y=VE_VCO2_SMA),colour='red')+
     geom_point(aes(y=VE_VCO2), colour='red')+
-    geom_vline(xintercept = df$TIME_S[vt$vt1_exco2_i],colour='black',
+    geom_vline(xintercept = df$TIME_S[vt$VT1_EXCO2_I],colour='black',
                linetype = "dotted")+
-    geom_vline(xintercept = df$TIME_S[vt$vt1_vslop_i],colour='black',
+    geom_vline(xintercept = df$TIME_S[vt$VT1_VSLOP_I],colour='black',
                linetype = "dashed")+
-    geom_vline(xintercept = df$TIME_S[vt$vt2_exve_i],colour='green',
+    geom_vline(xintercept = df$TIME_S[vt$VT2_EXVE_I],colour='green',
                linetype = "dotted")+
-    geom_vline(xintercept = df$TIME_S[vt$vt2_vslop_i],colour='green',
+    geom_vline(xintercept = df$TIME_S[vt$VT2_VSLOP_I],colour='green',
                linetype = "longdash")
     
   plots <- list(exco2,vslop1,exve,vslop2,bigplot)
@@ -378,7 +386,84 @@ plist_cps <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
 
 plots_cps <- marrangeGrob(plist_cps, nrow = 1, ncol = 1)
 
-ggsave("10bin_no_trunc.pdf", plots_cps, width = 11, height = 8.5, units = "in")
+ggsave("10bin_mean.pdf", plots_cps, width = 11, height = 8.5, units = "in")
+
+
+
+
+plist_cps_rnd <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
+                    FUN = function(df,vt){
+                      exco2 <- ggplot(df, aes(x=TIME_S))+
+                        geom_point(aes(y=EXCO2),colour='blue')+
+                        geom_vline(xintercept = df$TIME_S[vt$VT1_EXCO2_I], colour='green')+
+                        annotate(x=df$TIME_S[vt$VT1_EXCO2_I],y=+Inf,
+                                 label=paste0("VT1=",df$TIME_S[vt$VT1_EXCO2_I]," s"),vjust=2,geom="label")+
+                        theme_bw()
+                      
+                      vslop1 <- ggplot(df, aes(x=VO2_ABS))+
+                        geom_point(aes(y=VCO2),colour='blue')+
+                        geom_vline(xintercept = df$VO2_ABS[vt$VT1_VSLOP_I], colour='green')+
+                        annotate(x=df$VO2_ABS[vt$VT1_VSLOP_I],y=+Inf,
+                                 label=paste0("VT1=",df$TIME_S[vt$VT1_VSLOP_I]," s"),vjust=2,geom="label")+
+                        theme_bw()
+                      
+                      exve <- ggplot(df, aes(x=TIME_S))+
+                        geom_point(aes(y=EXVE),colour='blue')+
+                        geom_vline(xintercept = df$TIME_S[vt$VT2_EXVE_I], colour='green')+
+                        annotate(x=df$TIME_S[vt$VT2_EXVE_I],y=+Inf,
+                                 label=paste0("VT2=",df$TIME_S[vt$VT2_EXVE_I]," s"),vjust=2,geom="label")+
+                        theme_bw()
+                      
+                      vslop2 <- ggplot(df, aes(x=VCO2))+
+                        geom_point(aes(y=VE),colour='blue')+
+                        geom_vline(xintercept = df$VCO2[vt$VT2_VSLOP_I], colour='green')+
+                        annotate(x=df$VCO2[vt$VT2_VSLOP_I],y=+Inf,
+                                 label=paste0("VT2=",df$TIME_S[vt$VT2_VSLOP_I]," s"),vjust=2,geom="label")+
+                        theme_bw()
+                      
+                      bigplot <- ggplot(df, aes(x=TIME_S))+
+                        coord_cartesian(xlim = c(300, 1100),ylim = c(17.5,45))+
+                        scale_x_continuous(name="Time (s)",
+                                           breaks=seq(300,1100,50) )+
+                        scale_y_continuous(name="VE/VO2",
+                                           breaks=seq(15,45,5),sec.axis = sec_axis(~.,name="VE/VCO2") )+
+                        #geom_line(aes(y=VE_VO2_SMA),colour='blue')+
+                        geom_point(aes(y=VE_VO2), colour='blue')+
+                        #geom_line(aes(y=VE_VCO2_SMA),colour='red')+
+                        geom_point(aes(y=VE_VCO2), colour='red')+
+                        geom_vline(xintercept = df$TIME_S[vt$VT1_I],colour='black',
+                                   linetype = "dotted")+
+                        geom_vline(xintercept = df$TIME_S[vt$VT2_I],colour='green',
+                                   linetype = "longdash")+
+                        theme_bw()
+                      
+                      plots <- list(exco2,vslop1,exve,vslop2,bigplot)
+                      lay <- rbind(c(1,1,2,2),
+                                   c(1,1,2,2),
+                                   c(3,3,4,4),
+                                   c(3,3,4,4),
+                                   c(5,5,5,5),
+                                   c(5,5,5,5),
+                                   c(5,5,5,5),
+                                   c(5,5,5,5))
+                      
+                      out <- grid.arrange(grobs = plots, layout_matrix = lay)
+                      
+                      out
+                      
+                    })
+
+plots_cps <- marrangeGrob(plist_cps_rnd, nrow = 1, ncol = 1)
+
+ggsave("10bin_rounded.pdf", plots_cps, width = 11, height = 8.5, units = "in")
+
+
+
+
+vo2max <- lapply(test_data, function())
+
+
+
 
 
 
@@ -387,12 +472,12 @@ ex_plots <- mapply(df=test_data,dem=demo_data,vt=changepoints,SIMPLIFY = F,
 
 p <-  ggplot(df,aes(x=TIME_S))+
   
-  geom_vline(xintercept = vt$vt1)+
-  annotate(x=vt$vt1,y=+Inf,
+  geom_vline(xintercept = vt$VT1)+
+  annotate(x=vt$VT1,y=+Inf,
   label="VT1",vjust=2,geom="label")+
   
-  geom_vline(xintercept = vt$vt2)+
-  annotate(x=vt$vt2,y=+Inf,
+  geom_vline(xintercept = vt$VT2)+
+  annotate(x=vt$VT2,y=+Inf,
   label="VT2",vjust=2,geom="label")+
   
   geom_vline(xintercept = df$TIME_S[dem$EV_EX_I])+
