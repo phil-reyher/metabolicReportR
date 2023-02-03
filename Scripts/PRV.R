@@ -321,14 +321,19 @@ changepoints <- lapply(test_data_10bin, function(df){
   df
     })
 
-mapply(df = test_data, cp = changepoints, FUN = function(df,cp){
+mapply(df = test_data, cp = changepoints, 
+       FUN = function(df,cp){
   
-  perc <- cp$VT2_VO2/max(df$VO2_ABS)
   
+  vt1 <- cp$VT1_VO2/max(df$VO2_ABS)
+  vt2 <- cp$VT2_VO2/max(df$VO2_ABS)
+  
+  df <- tibble(vt1,vt2)
 })
 
-plist_cps <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
-               FUN = function(df,vt){
+plist_cps <- mapply(df=test_data_10bin, vt=changepoints, nam = partnames,
+                    SIMPLIFY = F, FUN = function(df,vt,nam){
+                
   exco2 <- ggplot(df, aes(x=TIME_S))+
     geom_point(aes(y=EXCO2),colour='blue')+
     geom_vline(xintercept = df$TIME_S[vt$VT1_EXCO2_I], colour='green')+
@@ -378,7 +383,7 @@ plist_cps <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
                c(5,5,5,5),
                c(5,5,5,5))
   
-  out <- grid.arrange(grobs = plots, layout_matrix = lay)
+  out <- grid.arrange(grobs = plots, layout_matrix = lay, top = nam)
   
   out
   
@@ -456,13 +461,6 @@ plist_cps_rnd <- mapply(df=test_data_10bin, vt=changepoints, SIMPLIFY = F,
 plots_cps <- marrangeGrob(plist_cps_rnd, nrow = 1, ncol = 1)
 
 ggsave("10bin_rounded.pdf", plots_cps, width = 11, height = 8.5, units = "in")
-
-
-
-
-vo2max <- lapply(test_data, function())
-
-
 
 
 
