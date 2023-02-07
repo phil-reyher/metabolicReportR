@@ -50,8 +50,8 @@ regex_s <- function (df,x,y=0){
   ##Find column name and row index of demographics with regex
   ##Outputs a list with elemts containing row index and the name of the
   ##elements containing the columnname!
-  tmp <- sapply(df, function(a) {
-    str_which(a, regex(x, ignore_case = T))
+  tmp <- sapply(df, function(col) {
+    str_which(col, regex(x, ignore_case = T))
   })
   ##find column index within list as column name is impractical for the
   ##following steps
@@ -69,13 +69,13 @@ regex_s <- function (df,x,y=0){
   )}
 
 ##save participant names in array for later
-partnames <- sapply(test_data, function(df,...) {
+partnames <- sapply(test_data, function(df) {
   NAME <- regex_s(df,"\\bname\\b")
 })
 
 names(test_data) <- partnames
 
-demo_data <- lapply(test_data, function(df,...) {
+demo_data <- lapply(test_data, function(df) {
   NAME <- regex_s(df,"\\bname\\b")
   AGE <- regex_s(df,"\\bage\\b")
   SEX <- regex_s(df,"\\bsex\\b")
@@ -91,7 +91,7 @@ demo_data <- lapply(test_data, function(df,...) {
   ifelse(is_empty(EV_CD)==1,EV_CD <- NA,EV_CD)
   
   df1 <- data.frame(NAME, AGE, SEX, MASS, PB, TEMP, RH, EV_WU, EV_EX, EV_CD)
-  df1 <- df1 %>% select_if(~ !any(is.na(.)))
+  df1 <- df1 %>% dplyr::select(where(~any(!is.na(.))))
   })
   
 ##function to extract the dates from file.list and append it to the demographics
@@ -234,7 +234,7 @@ test_data_sec <- lapply(test_data_trunc, function(df){
 test_data_10bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select_if(is.numeric)
+    dplyr::select(where(is.numeric))
   
   out <- data_num %>%
     dplyr::group_by(across(1, function(x) round(x / 10) * 10)) %>%
@@ -277,8 +277,10 @@ findchangepts_std <- function(x) {
       std2 <- sd(region2)
       mean1 <- mean(region1)
       mean2 <- mean(region2)
-      log_likelihood1 <- sum(dnorm(region1, mean = mean1, sd = std1, log = TRUE))
-      log_likelihood2 <- sum(dnorm(region2, mean = mean2, sd = std2, log = TRUE))
+      log_likelihood1 <- sum(dnorm(region1, mean = mean1, sd = std1,
+                                   log = TRUE))
+      log_likelihood2 <- sum(dnorm(region2, mean = mean2, sd = std2,
+                                   log = TRUE))
       log_likelihood <- log_likelihood + log_likelihood1 + log_likelihood2
     }
     if (log_likelihood > max_log_likelihood) {
@@ -423,10 +425,17 @@ plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
 plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
 
 #export plots
-ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11, height = 8.5, units = "in")
-ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11, height = 8.5, units = "in")
-ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11, height = 8.5, units = "in")
-ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11, height = 8.5, units = "in")
+ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
+       height = 8.5, units = "in")
+ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
+       height = 8.5, units = "in")
+ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
+       height = 8.5, units = "in")
+ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
+       height = 8.5, units = "in")
+
+################################ Bland Altmann #################################
+
 
 
 ##################################### WIP ######################################
