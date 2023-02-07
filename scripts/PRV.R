@@ -436,7 +436,18 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
 
 ################################ Bland Altmann #################################
 
+binder <- function(list,method){
+  bind_rows(list) %>%
+  select(VT1,VT2) %>% 
+  add_column(ID= partnames,.before = "VT1")%>%
+  add_column(method= method,.before = "VT1")
+}
+df_sec <- binder(cps_sec,"sec")
+df_5bin <- binder(cps_5bin,"5bin")
+df_10bin <- binder(cps_5bin,"10bin")
+df_15bin <- binder(cps_5bin,"15bin")
 
+df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
 
 ##################################### WIP ######################################
 
