@@ -322,8 +322,10 @@ cps_input <- function(test_data){
   VT2 <- df$TIME_S[VT2_I]
   VT1_VO2 <- df$VO2_ABS[VT1_I]
   VT2_VO2 <- df$VO2_ABS[VT2_I]
+  VT1_WORK <- df$WORK[VT1_I]
+  VT2_WORK <- df$WORK[VT2_I]
   df <- data.frame(VT1_EXCO2_I, VT1_VSLOP_I,VT2_EXVE_I, VT2_VSLOP_I,VT1_I,VT2_I,
-                   VT1,VT2,VT1_VO2,VT2_VO2)
+                   VT1,VT2,VT1_VO2,VT2_VO2,VT1_WORK,VT2_WORK)
   df
     })
 }
@@ -448,6 +450,8 @@ df_10bin <- binder(cps_5bin,"10bin")
 df_15bin <- binder(cps_5bin,"15bin")
 
 df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
+library(blandr)
+
 
 ##################################### WIP ######################################
 
