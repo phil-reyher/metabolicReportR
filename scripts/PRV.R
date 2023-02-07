@@ -15,6 +15,7 @@
 #                                                                              #
 ################################################################################
 
+################################### Packages ###################################
 library(readxl)
 library(tidyverse)
 library(data.table)
@@ -22,8 +23,6 @@ library(ggplot2)
 library(signal)
 library(gridExtra)
 library(grid)
-
-
 #################################### Import ####################################
 
 ##get dir that script is in
@@ -151,7 +150,7 @@ test_data <- lapply(test_data, function(df) {
   df
   })
 
-####################### add indices for exercise start & end####################
+####################### Add indices for exercise start & end####################
 demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                     FUN= function(df,dem){
                       ev_ex <- as.numeric(dem$EV_EX)*60
@@ -430,7 +429,7 @@ ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11, height = 8.5, units =
 ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11, height = 8.5, units = "in")
 
 
-
+##################################### WIP ######################################
 
 mapply(df = test_data, cp = changepoints, 
        FUN = function(df,cp){
@@ -442,9 +441,6 @@ mapply(df = test_data, cp = changepoints,
          df <- tibble(vt1,vt2)
        })
 
-
-
-##################################### WIP ######################################
 
 ex_plots <- mapply(df=test_data,dem=demo_data,vt=changepoints,SIMPLIFY = F,
                   FUN=function(df,dem,vt){
