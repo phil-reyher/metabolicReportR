@@ -39,6 +39,7 @@ file.list = list.files(path = "data/single", pattern = "*.csv", ignore.case = T,
 test_data <- lapply(file.list, function(x){ 
   df <- fread(x, header = F, fill = T, sep = ",", quote = "\"", dec = ".",
   na.strings = "")
+  df
   })
 
 ################### Extract demographics and test parameters ###################
@@ -125,7 +126,8 @@ test_data <- lapply(test_data, function(df) {
   coln <- str_replace(coln,regex("^(?=.*(VO2))(?=.*(kg)).*$",ignore_case = T),"VO2_REL")
   coln <- str_replace(coln,regex("VO2STPD",ignore_case = T),"VO2_ABS")
   coln <- str_replace(coln,regex(".*work.*",ignore_case = T),"WORK")
-  coln <- str_replace_all(coln,regex(".*hr.*",ignore_case = T),"HR")
+  coln <- str_replace(coln,regex(".*hr.*",ignore_case = T),"HR")
+
   coln <- toupper(gsub("STPD","",coln))
   colnames(df) <- coln
   ##remove anything but data
@@ -150,22 +152,11 @@ test_data <- lapply(test_data, function(df) {
   df
   })
 
-####################### Add indices for exercise start & end####################
-demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
-                    FUN= function(df,dem){
-                      ev_ex <- as.numeric(dem$EV_EX)*60
-                      ev_cd <- as.numeric(dem$EV_CD)*60
-                      beg <- which.max(df$TIME_S >= ev_ex)
-                      end <- which.max(df$TIME_S >= ev_cd)
-                      dem$EV_EX_I <- beg
-                      dem$EV_CD_I <- end
-                      dem
-                    })
-  
 ########################## Smoothing, computation of vars ######################
 test_data <- lapply(test_data,function(df) {
   bf <- butter(3, 0.04, type= 'low')
   df$VO2_ABS_LOW <- signal::filtfilt(bf, df$VO2_ABS)
+  df$VO2_REL_LOW <- signal::filtfilt(bf, df$VO2_REL)
   
   df$VCO2_LOW <- signal::filtfilt(bf, df$VCO2)
   
@@ -178,14 +169,14 @@ test_data <- lapply(test_data,function(df) {
   
   f15 <- rep(1/15,15)
   df$VO2_ABS_SMA <- stats::filter(df$VO2_ABS, f15, method = "convolution",
-  sides = 2, circular = TRUE)
+                                  sides = 2, circular = TRUE)
   
   f30 <- rep(1/30,30)
   df$VE_VO2_SMA <- stats::filter(df$VE_VO2, f30, method = "convolution",
-                                  sides = 2, circular = TRUE)
+                                 sides = 2, circular = TRUE)
   
   df$VE_VCO2_SMA <- stats::filter(df$VE_VCO2, f30, method = "convolution",
-                                 sides = 2, circular = TRUE)
+                                  sides = 2, circular = TRUE)
   
   #df$VE_VO2_LOW <- df$VE_LOW/df$VO2_ABS_LOW
   #df$VE_VCO2_LOW <- df$VE_LOW/df$VCO2_LOW
@@ -197,10 +188,26 @@ test_data <- lapply(test_data,function(df) {
   df$EXCO2_LOW <- ( ( (df$VCO2_LOW*df$VCO2_LOW)/df$VO2_ABS_LOW) - df$VCO2_LOW)
   df$EXVE_LOW <- ( ( (df$VE_LOW*df$VE_LOW)/df$VCO2_LOW) - df$VE_LOW)
   
+  #no forgetti removi!!!
+  df$HR <- 100
   
   df
-  })
-
+})
+############################# extend demo data #################################
+demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
+                    FUN= function(df,dem){
+                      ev_ex <- as.numeric(dem$EV_EX)*60
+                      ev_cd <- as.numeric(dem$EV_CD)*60
+                      beg <- which.max(df$TIME_S >= ev_ex)
+                      end <- which.max(df$TIME_S >= ev_cd)
+                      dem$EV_EX_I <- beg
+                      dem$EV_CD_I <- end
+                      dem$VO2MAX_ABS <- max(df$VO2_ABS_LOW)
+                      dem$VO2MAX_REL <- max(df$VO2_REL_LOW)
+                      dem$HRMAX <- max(df$HR)
+                      dem$WORKMAX <- max(df$WORK)
+                      dem
+                    })
 ################################## Truncation ##################################
 test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                     FUN= function(df,dem){
@@ -320,14 +327,26 @@ cps_input <- function(test_data){
   ##combine
   VT1_I <- round((VT1_EXCO2_I+VT1_VSLOP_I)/2)
   VT2_I <- round((VT2_EXVE_I+VT2_VSLOP_I)/2)
-  VT1 <- df$TIME_S[VT1_I]
-  VT2 <- df$TIME_S[VT2_I]
+  VT1_TIME <- df$TIME_S[VT1_I]
+  VT2_TIME <- df$TIME_S[VT2_I]
   VT1_VO2 <- df$VO2_ABS[VT1_I]
   VT2_VO2 <- df$VO2_ABS[VT2_I]
   VT1_WORK <- df$WORK[VT1_I]
   VT2_WORK <- df$WORK[VT2_I]
+  VT1_HR <- df$HR[VT1_I]
+  VT2_HR <- df$HR[VT2_I]
+  
+  VT1_VO2_PERC <- df$VO2_ABS[VT1_I]
+  VT2_VO2_PERC <- df$VO2_ABS[VT2_I]
+  VT1_WORK_PERC <- df$WORK[VT1_I]
+  VT2_WORK_PERC <- df$WORK[VT2_I]
+  VT1_HR_PERC <- df$HR[VT1_I]
+  VT2_HR_PERC <- df$HR[VT2_I]
+  
   df <- data.frame(VT1_EXCO2_I, VT1_VSLOP_I,VT2_EXVE_I, VT2_VSLOP_I,VT1_I,VT2_I,
-                   VT1,VT2,VT1_VO2,VT2_VO2,VT1_WORK,VT2_WORK)
+                   VT1_TIME,VT2_TIME,VT1_VO2,VT2_VO2,VT1_WORK,VT2_WORK,VT1_HR,
+                   VT2_HR,VT1_VO2_PERC,VT2_VO2_PERC,VT1_WORK_PERC,VT2_WORK_PERC,
+                   VT1_HR_PERC,VT2_HR_PERC)
   df
     })
 }
@@ -441,14 +460,70 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
 ggsave("plots/parv_cps.pdf", plots_cps_parv, width = 11,
        height = 8.5, units = "in")
 
+############################# Table summary ####################################
 
+tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,FUN = function(cp,dem){
+  
+  cp$VT1_VO2_PERC <- cp$VT1_VO2_PERC/dem$VO2MAX_ABS
+  cp$VT2_VO2_PERC <- cp$VT2_VO2_PERC/dem$VO2MAX_ABS
+  
+  cp$VT1_WORK_PERC <- cp$VT1_WORK_PERC/dem$WORKMAX
+  cp$VT2_WORK_PERC <- cp$VT2_WORK_PERC/dem$WORKMAX
+  
+  cp$VT1_HR_PERC <- cp$VT1_HR_PERC/dem$HRMAX
+  cp$VT2_HR_PERC <- cp$VT2_HR_PERC/dem$HRMAX
+  cp
+})
+
+########################### Coggan Power Zones #################################
+
+lapply(demo_data, function(df){
+  
+  lvl1_work <- round(df$WORKMAX*0.55,digits = 2) %>% as.character(.)
+  lvl1_hr <- round(df$HRMAX*0.68,digits = 2) %>% as.character(.)
+  
+  lvl2_work_low <- round(df$WORKMAX*0.56,digits = 2) %>% as.character(.)
+  lvl2_work_up <- round(df$WORKMAX*0.75,digits = 2) %>% as.character(.)
+  lvl2_hr_low <- round(df$HRMAX*0.69,digits = 2) %>% as.character(.)
+  lvl2_hr_up <- round(df$HRMAX*0.83,digits = 2) %>% as.character(.)
+  
+  lvl3_work_low <- round(df$WORKMAX*0.76,digits = 2) %>% as.character(.)
+  lvl3_work_up <- round(df$WORKMAX*0.90,digits = 2) %>% as.character(.)
+  lvl3_hr_low <- round(df$HRMAX*0.84,digits = 2) %>% as.character(.)
+  lvl3_hr_up <- round(df$HRMAX*0.94,digits = 2) %>% as.character(.)
+  
+  lvl4_work_low <- round(df$WORKMAX*0.91,digits = 2) %>% as.character(.)
+  lvl4_work_up <- round(df$WORKMAX*1.05,digits = 2) %>% as.character(.)
+  lvl4_hr_low <- round(df$HRMAX*0.95,digits = 2) %>% as.character(.)
+  lvl4_hr_up <- round(df$HRMAX*1.05,digits = 2) %>% as.character(.)
+  
+  lvl5_work_low <- round(df$WORKMAX*1.06,digits = 2) %>% as.character(.)
+  lvl5_work_up <- round(df$WORKMAX*1.2,digits = 2) %>% as.character(.)
+  lvl5_hr <- round(df$HRMAX*1.06,digits = 2) %>% as.character(.)
+
+  
+  lvl1 <- c(1,"Active Recovery",paste0("<",lvl1_work),paste0("<",lvl1_hr))
+  lvl2 <- c(2,"Endurance",paste(lvl2_work_low,lvl2_work_up,sep = '-'),
+            paste(lvl2_hr_low,lvl2_hr_up,sep = '-') )
+  lvl3 <- c(3,"Tempo",paste(lvl3_work_low,lvl3_work_up,sep = '-'),
+            paste(lvl3_hr_low,lvl3_hr_up,sep = '-') )
+  lvl4 <- c(4,"Lactate Threshold",paste(lvl4_work_low,lvl4_work_up,sep = '-'),
+            paste(lvl4_hr_low,lvl4_hr_up,sep = '-') )
+  lvl5 <- c(5,"VO2 Max",paste(lvl5_work_low,lvl5_work_up,sep = '-'),
+            paste0(">",lvl5_hr) )
+  tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5))
+  colnames(tr_zones) <- c("Level","Name","Average Power","Average HR")
+  rownames(tr_zones) <- NULL
+  out <- tr_zones
+  out
+})
 
 
 ################################ Bland Altmann #################################
 
 binder <- function(list,method){
   bind_rows(list) %>%
-  select(VT1,VT2) %>% 
+  select(VT1_TIME,VT2_TIME) %>% 
   add_column(ID= partnames,.before = "VT1")%>%
   add_column(method= method,.before = "VT1")
 }
@@ -479,12 +554,12 @@ ex_plots <- mapply(df=test_data,dem=demo_data,vt=cps_10bin,SIMPLIFY = F,
 
 p <-  ggplot(df,aes(x=TIME_S))+
   
-  geom_vline(xintercept = vt$VT1)+
-  annotate(x=vt$VT1,y=+Inf,
+  geom_vline(xintercept = vt$VT1_TIME)+
+  annotate(x=vt$VT1_TIME,y=+Inf,
   label="VT1",vjust=2,geom="label")+
   
-  geom_vline(xintercept = vt$VT2)+
-  annotate(x=vt$VT2,y=+Inf,
+  geom_vline(xintercept = vt$VT2_TIME)+
+  annotate(x=vt$VT2_TIME,y=+Inf,
   label="VT2",vjust=2,geom="label")+
   
   geom_vline(xintercept = df$TIME_S[dem$EV_EX_I])+
