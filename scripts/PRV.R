@@ -211,6 +211,8 @@ test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                   })
 
 ############################ Interpolation, Binning ############################
+
+##5point
 test_data_sec <- lapply(test_data_trunc, function(df){
   interpolate <- function(df) {
     ## first make sure data only contains numeric columns
@@ -334,7 +336,6 @@ cps_5bin <- cps_input(test_data_5bin)
 cps_10bin <- cps_input(test_data_10bin)
 cps_15bin <- cps_input(test_data_15bin)
 cps_sec <- cps_input(test_data_sec)
-
 ####################### Changepoints plotting ##################################
 
 #plotting function
@@ -426,6 +427,7 @@ plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
 plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
 plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
 
+
 #export plots
 ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
        height = 8.5, units = "in")
@@ -435,6 +437,12 @@ ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
        height = 8.5, units = "in")
 ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
        height = 8.5, units = "in")
+
+ggsave("plots/parv_cps.pdf", plots_cps_parv, width = 11,
+       height = 8.5, units = "in")
+
+
+
 
 ################################ Bland Altmann #################################
 
@@ -466,7 +474,7 @@ mapply(df = test_data, cp = changepoints,
        })
 
 
-ex_plots <- mapply(df=test_data,dem=demo_data,vt=changepoints,SIMPLIFY = F,
+ex_plots <- mapply(df=test_data,dem=demo_data,vt=cps_10bin,SIMPLIFY = F,
                   FUN=function(df,dem,vt){
 
 p <-  ggplot(df,aes(x=TIME_S))+
