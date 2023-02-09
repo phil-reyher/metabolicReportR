@@ -398,10 +398,10 @@ plist_cps_func <- function(test_data,cps_data){
            coord_cartesian(xlim = c(300, 1100),ylim = c(7.5,45))+
            scale_x_continuous(name="Time (s)",
                               breaks=seq(300,1150,50) )+
-           scale_y_continuous(name="VE/VO2",breaks=seq(10,45,5),
-                              sec.axis = dup_axis(~.,name="VE/VCO2") )+
-           geom_point(aes(y=VE_VO2), colour='blue')+
-           geom_point(aes(y=VE_VCO2), colour='red')+
+           scale_y_continuous(name="VE/VO2 | VE/VCO2", breaks=seq(10,45,5),
+           sec.axis = sec_axis(~.*10,name='Work' ) )+
+           geom_point(aes(y=VE_VO2, colour='VE/VO2') )+
+           geom_point(aes(y=VE_VCO2, colour='VE/VCO2') )+
            geom_vline(xintercept = df$TIME_S[vt$VT1_I],colour='black',
                       linetype = "dotted")+
            annotate(x=df$TIME_S[vt$VT1_I],y=+Inf,
@@ -412,15 +412,28 @@ plist_cps_func <- function(test_data,cps_data){
            annotate(x=df$TIME_S[vt$VT2_I],y=+Inf,
                     label=paste0("VT2=",df$TIME_S[vt$VT2_I]," s"),
                     vjust=2,geom="label")+
-           geom_area(aes(y = (WORK/10)), fill ="lightblue", 
-                     alpha = 0.4 ) +
-           theme_bw()
+           geom_area(aes(y = (WORK/10),colour="Work"), fill ="lightblue", 
+                     alpha = 0.4) +
+           scale_color_manual(name=' ',
+                          breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
+              values=c('VE/VO2'='blue', 'VE/VCO2'='red', 'Work'='lightblue'),
+              guides(colour = guide_legend(override.aes = list(size = 10) ) ) )+
+          theme_bw()+
+           guides(shape = guide_legend(override.aes = list(size = 1)))+
+           guides(color = guide_legend(override.aes = list(size = 1)))+
+           theme(legend.title = element_blank(),
+                 legend.text = element_text(size = 10),
+                 legend.position = c(.05, .95),
+                 legend.justification = c("left", "top"),
+                 legend.box.just = "right",
+                 legend.margin = margin(6, 6, 6, 6) )
          
          plots <- list(exco2,vslop1,exve,vslop2,bigplot)
          lay <- rbind(c(1,1,2,2),
                       c(1,1,2,2),
                       c(3,3,4,4),
                       c(3,3,4,4),
+                      c(5,5,5,5),
                       c(5,5,5,5),
                       c(5,5,5,5),
                       c(5,5,5,5),
