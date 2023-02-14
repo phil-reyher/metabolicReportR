@@ -1,0 +1,17 @@
+---
+output: pdf_document
+header-includes:
+   - \usepackage{amsmath}
+---
+```{r setup, include=FALSE}
+setwd("..")
+knitr::opts_chunk$set(echo = TRUE)
+load(file = ".RData") 
+```
+
+\begin{center}
+\textbf{\Huge La Trobe Performance Hub}
+\end{center}
+
+
+

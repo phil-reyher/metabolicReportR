@@ -14,7 +14,6 @@
 #                Metabolic Cart data                                           #
 #                                                                              #
 ################################################################################
-
 ################################### Packages ###################################
 library(readxl)
 library(tidyverse)
@@ -45,8 +44,8 @@ test_data <- lapply(file.list, function(x){
 ################### Extract demographics and test parameters ###################
 ##function to perform regex search x must be a regular expression as a string,
 ##which is then searched for within the dataset
-##y is optional, input 1 so the value 'left' to the searched cell is used, not the
-##default: 'right'
+##y is optional, input 1 so the value 'left' to the searched cell is extracted,
+##instead of the default: 'right'
 regex_s <- function (df,x,y=0){
   ##Find column name and row index of demographics with regex
   ##Outputs a list with elemts containing row index and the name of the
@@ -192,7 +191,8 @@ test_data <- lapply(test_data,function(df) {
   df$HR <- 100
   
   df
-})
+}
+
 ############################# extend demo data #################################
 demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                     FUN= function(df,dem){
@@ -208,6 +208,7 @@ demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                       dem$WORKMAX <- max(df$WORK)
                       dem
                     })
+
 ################################## Truncation ##################################
 test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                     FUN= function(df,dem){
@@ -313,20 +314,20 @@ cps_input <- function(test_data){
   ##VT1##
   ##V-Slope##
   vslop <- df_vt1 %>% select(VO2_ABS,VCO2) %>% as.matrix(.) %>% t(.)
-  VT1_VSLOP_I <- findchangepts_std(vslop)+vt1_i_beg-1
+  VT1VSLOP_I <- findchangepts_std(vslop)#+vt1_i_beg-1
   #EXCO2##
   exco2 <- df_vt1 %>% select(EXCO2) %>% as.matrix(.) %>% t(.)
-  VT1_EXCO2_I <- findchangepts_std(exco2)+vt1_i_beg-1
+  VT1EXCO2_I <- findchangepts_std(exco2)#+vt1_i_beg-1
   ##VT2##
   ##V-Slope##
   vslop2 <- df_vt2 %>% select(VCO2,VE) %>% as.matrix(.) %>% t(.)
-  VT2_VSLOP_I <- findchangepts_std(vslop2)+vt2_i_beg-1
+  VT2VSLOP_I <- findchangepts_std(vslop2)#+vt2_i_beg-1
   ##EXVE##
   exve <- df_vt2 %>% select(EXVE) %>% as.matrix(.) %>% t(.)
-  VT2_EXVE_I <- findchangepts_std(exve)+vt2_i_beg-1
+  VT2EXVE_I <- findchangepts_std(exve)#+vt2_i_beg-1
   ##combine
-  VT1_I <- round((VT1_EXCO2_I+VT1_VSLOP_I)/2)
-  VT2_I <- round((VT2_EXVE_I+VT2_VSLOP_I)/2)
+  VT1_I <- round((VT1EXCO2_I+VT1VSLOP_I)/2)
+  VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
   VT1_TIME <- df$TIME_S[VT1_I]
   VT2_TIME <- df$TIME_S[VT2_I]
   VT1_VO2 <- df$VO2_ABS[VT1_I]
@@ -336,17 +337,17 @@ cps_input <- function(test_data){
   VT1_HR <- df$HR[VT1_I]
   VT2_HR <- df$HR[VT2_I]
   
-  VT1_VO2_PERC <- df$VO2_ABS[VT1_I]
-  VT2_VO2_PERC <- df$VO2_ABS[VT2_I]
-  VT1_WORK_PERC <- df$WORK[VT1_I]
-  VT2_WORK_PERC <- df$WORK[VT2_I]
-  VT1_HR_PERC <- df$HR[VT1_I]
-  VT2_HR_PERC <- df$HR[VT2_I]
+  VT1_VO2PERC <- df$VO2_ABS[VT1_I]
+  VT2_VO2PERC <- df$VO2_ABS[VT2_I]
+  VT1_WORKPERC <- df$WORK[VT1_I]
+  VT2_WORKPERC <- df$WORK[VT2_I]
+  VT1_HRPERC <- df$HR[VT1_I]
+  VT2_HRPERC <- df$HR[VT2_I]
   
-  df <- data.frame(VT1_EXCO2_I, VT1_VSLOP_I,VT2_EXVE_I, VT2_VSLOP_I,VT1_I,VT2_I,
+  df <- data.frame(VT1EXCO2_I, VT1VSLOP_I,VT2EXVE_I, VT2VSLOP_I,VT1_I,VT2_I,
                    VT1_TIME,VT2_TIME,VT1_VO2,VT2_VO2,VT1_WORK,VT2_WORK,VT1_HR,
-                   VT2_HR,VT1_VO2_PERC,VT2_VO2_PERC,VT1_WORK_PERC,VT2_WORK_PERC,
-                   VT1_HR_PERC,VT2_HR_PERC)
+                   VT2_HR,VT1_VO2PERC,VT2_VO2PERC,VT1_WORKPERC,VT2_WORKPERC,
+                   VT1_HRPERC,VT2_HRPERC)
   df
     })
 }
@@ -364,33 +365,33 @@ plist_cps_func <- function(test_data,cps_data){
         {
          exco2 <- ggplot(df, aes(x=TIME_S))+
            geom_point(aes(y=EXCO2),colour='blue')+
-           geom_vline(xintercept = df$TIME_S[vt$VT1_EXCO2_I], colour='green')+
-           annotate(x=df$TIME_S[vt$VT1_EXCO2_I],y=+Inf,
-                    label=paste0("VT1=",df$TIME_S[vt$VT1_EXCO2_I]," s"),
+           geom_vline(xintercept = df$TIME_S[vt$VT1EXCO2_I], colour='green')+
+           annotate(x=df$TIME_S[vt$VT1EXCO2_I],y=+Inf,
+                    label=paste0("VT1=",df$TIME_S[vt$VT1EXCO2_I]," s"),
                     vjust=2,geom="label")+
            theme_bw()
          
          vslop1 <- ggplot(df, aes(x=VO2_ABS))+
            geom_point(aes(y=VCO2),colour='blue')+
-           geom_vline(xintercept = df$VO2_ABS[vt$VT1_VSLOP_I], colour='green')+
-           annotate(x=df$VO2_ABS[vt$VT1_VSLOP_I],y=+Inf,
-                    label=paste0("VT1=",df$TIME_S[vt$VT1_VSLOP_I]," s"),
+           geom_vline(xintercept = df$VO2_ABS[vt$VT1VSLOP_I], colour='green')+
+           annotate(x=df$VO2_ABS[vt$VT1VSLOP_I],y=+Inf,
+                    label=paste0("VT1=",df$TIME_S[vt$VT1VSLOP_I]," s"),
                     vjust=2,geom="label")+
            theme_bw()
          
          exve <- ggplot(df, aes(x=TIME_S))+
            geom_point(aes(y=EXVE),colour='blue')+
-           geom_vline(xintercept = df$TIME_S[vt$VT2_EXVE_I], colour='green')+
-           annotate(x=df$TIME_S[vt$VT2_EXVE_I],y=+Inf,
-                    label=paste0("VT2=",df$TIME_S[vt$VT2_EXVE_I]," s"),
+           geom_vline(xintercept = df$TIME_S[vt$VT2EXVE_I], colour='green')+
+           annotate(x=df$TIME_S[vt$VT2EXVE_I],y=+Inf,
+                    label=paste0("VT2=",df$TIME_S[vt$VT2EXVE_I]," s"),
                     vjust=2,geom="label")+
            theme_bw()
          
          vslop2 <- ggplot(df, aes(x=VCO2))+
            geom_point(aes(y=VE),colour='blue')+
-           geom_vline(xintercept = df$VCO2[vt$VT2_VSLOP_I], colour='green')+
-           annotate(x=df$VCO2[vt$VT2_VSLOP_I],y=+Inf,
-                    label=paste0("VT2=",df$TIME_S[vt$VT2_VSLOP_I]," s"),
+           geom_vline(xintercept = df$VCO2[vt$VT2VSLOP_I], colour='green')+
+           annotate(x=df$VCO2[vt$VT2VSLOP_I],y=+Inf,
+                    label=paste0("VT2=",df$TIME_S[vt$VT2VSLOP_I]," s"),
                     vjust=2,geom="label")+
            theme_bw()
          
@@ -459,71 +460,72 @@ plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
 plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
 plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
 
-
 #export plots
 ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
        height = 8.5, units = "in")
-ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
+ggsave("plots/10bin_difftrunc.pdf", plots_cps_10bin, width = 11,
        height = 8.5, units = "in")
 ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
        height = 8.5, units = "in")
 ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
        height = 8.5, units = "in")
 
-ggsave("plots/parv_cps.pdf", plots_cps_parv, width = 11,
-       height = 8.5, units = "in")
-
 ############################# Table summary ####################################
-
-tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,FUN = function(cp,dem){
+tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
+                  FUN = function(cp,dem){
   
-  cp$VT1_VO2_PERC <- cp$VT1_VO2_PERC/dem$VO2MAX_ABS
-  cp$VT2_VO2_PERC <- cp$VT2_VO2_PERC/dem$VO2MAX_ABS
+  cp$VT1_VO2PERC <- cp$VT1_VO2PERC/dem$VO2MAX_ABS
+  cp$VT2_VO2PERC <- cp$VT2_VO2PERC/dem$VO2MAX_ABS
   
-  cp$VT1_WORK_PERC <- cp$VT1_WORK_PERC/dem$WORKMAX
-  cp$VT2_WORK_PERC <- cp$VT2_WORK_PERC/dem$WORKMAX
+  cp$VT1_WORKPERC <- cp$VT1_WORKPERC/dem$WORKMAX
+  cp$VT2_WORKPERC <- cp$VT2_WORKPERC/dem$WORKMAX
   
-  cp$VT1_HR_PERC <- cp$VT1_HR_PERC/dem$HRMAX
-  cp$VT2_HR_PERC <- cp$VT2_HR_PERC/dem$HRMAX
+  cp$VT1_HRPERC <- cp$VT1_HRPERC/dem$HRMAX
+  cp$VT2_HRPERC <- cp$VT2_HRPERC/dem$HRMAX
+  
+  cp <- select(cp, -c(VT1EXCO2_I,VT1VSLOP_I,VT2VSLOP_I,VT2EXVE_I)) %>%
+  pivot_longer(everything(),names_sep = "_",names_to = c("THRESHOLD","var")) %>%
+  pivot_wider(id_cols =THRESHOLD, names_from = var, values_from = value,
+              names_repair = "check_unique")
+  
   cp
 })
 
 ########################### Coggan Power Zones #################################
+zones <- lapply(demo_data, function(df){
+  
+  lvl1_work <- round(df$WORKMAX*0.55) %>% as.character(.)
+  lvl1_hr <- round(df$HRMAX*0.68) %>% as.character(.)
+  
+  lvl2_work_low <- round(df$WORKMAX*0.56) %>% as.character(.)
+  lvl2_work_up <- round(df$WORKMAX*0.75) %>% as.character(.)
+  lvl2_hr_low <- round(df$HRMAX*0.69) %>% as.character(.)
+  lvl2_hr_up <- round(df$HRMAX*0.83) %>% as.character(.)
+  
+  lvl3_work_low <- round(df$WORKMAX*0.76) %>% as.character(.)
+  lvl3_work_up <- round(df$WORKMAX*0.90) %>% as.character(.)
+  lvl3_hr_low <- round(df$HRMAX*0.84) %>% as.character(.)
+  lvl3_hr_up <- round(df$HRMAX*0.94) %>% as.character(.)
+  
+  lvl4_work_low <- round(df$WORKMAX*0.91) %>% as.character(.)
+  lvl4_work_up <- round(df$WORKMAX*1.05) %>% as.character(.)
+  lvl4_hr_low <- round(df$HRMAX*0.95) %>% as.character(.)
+  lvl4_hr_up <- round(df$HRMAX*1.05) %>% as.character(.)
+  
+  lvl5_work_low <- round(df$WORKMAX*1.06) %>% as.character(.)
+  lvl5_work_up <- round(df$WORKMAX*1.2) %>% as.character(.)
+  lvl5_hr <- round(df$HRMAX*1.06) %>% as.character(.)
 
-lapply(demo_data, function(df){
   
-  lvl1_work <- round(df$WORKMAX*0.55,digits = 2) %>% as.character(.)
-  lvl1_hr <- round(df$HRMAX*0.68,digits = 2) %>% as.character(.)
-  
-  lvl2_work_low <- round(df$WORKMAX*0.56,digits = 2) %>% as.character(.)
-  lvl2_work_up <- round(df$WORKMAX*0.75,digits = 2) %>% as.character(.)
-  lvl2_hr_low <- round(df$HRMAX*0.69,digits = 2) %>% as.character(.)
-  lvl2_hr_up <- round(df$HRMAX*0.83,digits = 2) %>% as.character(.)
-  
-  lvl3_work_low <- round(df$WORKMAX*0.76,digits = 2) %>% as.character(.)
-  lvl3_work_up <- round(df$WORKMAX*0.90,digits = 2) %>% as.character(.)
-  lvl3_hr_low <- round(df$HRMAX*0.84,digits = 2) %>% as.character(.)
-  lvl3_hr_up <- round(df$HRMAX*0.94,digits = 2) %>% as.character(.)
-  
-  lvl4_work_low <- round(df$WORKMAX*0.91,digits = 2) %>% as.character(.)
-  lvl4_work_up <- round(df$WORKMAX*1.05,digits = 2) %>% as.character(.)
-  lvl4_hr_low <- round(df$HRMAX*0.95,digits = 2) %>% as.character(.)
-  lvl4_hr_up <- round(df$HRMAX*1.05,digits = 2) %>% as.character(.)
-  
-  lvl5_work_low <- round(df$WORKMAX*1.06,digits = 2) %>% as.character(.)
-  lvl5_work_up <- round(df$WORKMAX*1.2,digits = 2) %>% as.character(.)
-  lvl5_hr <- round(df$HRMAX*1.06,digits = 2) %>% as.character(.)
-
-  
-  lvl1 <- c(1,"Active Recovery",paste0("<",lvl1_work),paste0("<",lvl1_hr))
-  lvl2 <- c(2,"Endurance",paste(lvl2_work_low,lvl2_work_up,sep = '-'),
-            paste(lvl2_hr_low,lvl2_hr_up,sep = '-') )
-  lvl3 <- c(3,"Tempo",paste(lvl3_work_low,lvl3_work_up,sep = '-'),
-            paste(lvl3_hr_low,lvl3_hr_up,sep = '-') )
-  lvl4 <- c(4,"Lactate Threshold",paste(lvl4_work_low,lvl4_work_up,sep = '-'),
-            paste(lvl4_hr_low,lvl4_hr_up,sep = '-') )
-  lvl5 <- c(5,"VO2 Max",paste(lvl5_work_low,lvl5_work_up,sep = '-'),
-            paste0(">",lvl5_hr) )
+  lvl1 <- c(1,"Active Recovery",paste0(" < ",lvl1_work),paste0(" < ",lvl1_hr))
+  lvl2 <- c(2,"Endurance",paste(lvl2_work_low,lvl2_work_up,sep = ' - '),
+            paste(lvl2_hr_low,lvl2_hr_up,sep = ' - ') )
+  lvl3 <- c(3,"Tempo",paste(lvl3_work_low,lvl3_work_up,sep = ' - '),
+            paste(lvl3_hr_low,lvl3_hr_up,sep = ' - ') )
+  lvl4 <- c(4,"Lactate Threshold",paste(lvl4_work_low,lvl4_work_up,sep = ' - '),
+            paste(lvl4_hr_low,lvl4_hr_up,sep = ' - ') )
+  lvl5 <- c(5,"VO2 Max",paste(lvl5_work_low,lvl5_work_up,sep = ' - '),
+            paste0(" > ",lvl5_hr) )
   tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5))
   colnames(tr_zones) <- c("Level","Name","Average Power","Average HR")
   rownames(tr_zones) <- NULL
@@ -531,9 +533,7 @@ lapply(demo_data, function(df){
   out
 })
 
-
 ################################ Bland Altmann #################################
-
 binder <- function(list,method){
   bind_rows(list) %>%
   select(VT1_TIME,VT2_TIME) %>% 
@@ -542,12 +542,11 @@ binder <- function(list,method){
 }
 df_sec <- binder(cps_sec,"sec")
 df_5bin <- binder(cps_5bin,"5bin")
-df_10bin <- binder(cps_5bin,"10bin")
-df_15bin <- binder(cps_5bin,"15bin")
+df_10bin <- binder(cps_10bin,"10bin")
+df_15bin <- binder(cps_15bin,"15bin")
 
 df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
 library(blandr)
-
 
 ##################################### WIP ######################################
 
