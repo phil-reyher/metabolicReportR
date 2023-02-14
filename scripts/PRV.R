@@ -314,17 +314,17 @@ cps_input <- function(test_data){
   ##VT1##
   ##V-Slope##
   vslop <- df_vt1 %>% select(VO2_ABS,VCO2) %>% as.matrix(.) %>% t(.)
-  VT1VSLOP_I <- findchangepts_std(vslop)#+vt1_i_beg-1
+  VT1VSLOP_I <- findchangepts_std(vslop)+vt1_i_beg-1
   #EXCO2##
   exco2 <- df_vt1 %>% select(EXCO2) %>% as.matrix(.) %>% t(.)
-  VT1EXCO2_I <- findchangepts_std(exco2)#+vt1_i_beg-1
+  VT1EXCO2_I <- findchangepts_std(exco2)+vt1_i_beg-1
   ##VT2##
   ##V-Slope##
   vslop2 <- df_vt2 %>% select(VCO2,VE) %>% as.matrix(.) %>% t(.)
-  VT2VSLOP_I <- findchangepts_std(vslop2)#+vt2_i_beg-1
+  VT2VSLOP_I <- findchangepts_std(vslop2)+vt2_i_beg-1
   ##EXVE##
   exve <- df_vt2 %>% select(EXVE) %>% as.matrix(.) %>% t(.)
-  VT2EXVE_I <- findchangepts_std(exve)#+vt2_i_beg-1
+  VT2EXVE_I <- findchangepts_std(exve)+vt2_i_beg-1
   ##combine
   VT1_I <- round((VT1EXCO2_I+VT1VSLOP_I)/2)
   VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
