@@ -2,16 +2,24 @@
 output: pdf_document
 header-includes:
    - \usepackage{amsmath}
+   - \usepackage{tabularx}
+   - \usepackage{fancyhdr}
+   - \usepackage{graphicx}
+   - \lhead{\includegraphics[width=0.25\textwidth]{logo.svg}}
+   - \setlength{\headheight}{30pt}
 ---
 ```{r setup, include=FALSE}
-setwd("..")
 knitr::opts_chunk$set(echo = TRUE)
 load(file = ".RData") 
 ```
-
 \begin{center}
-\textbf{\Huge La Trobe Performance Hub}
+\textbf{\large \textbf{La Trobe Performance Hub} }
 \end{center}
-
+\vspace{2em}
+\begin{tabularx}{\textwidth}{r c}
+\textbf{Athlete Name:} & `r dem$NAME`\\
+\textbf{Date of Birth:} & `r dem$TEST_DAT`\\
+\textbf{Sport:} & \\
+\end{tabularx}
 
 
