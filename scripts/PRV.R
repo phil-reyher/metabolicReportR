@@ -191,7 +191,7 @@ test_data <- lapply(test_data,function(df) {
   df$HR <- 100
   
   df
-}
+})
 
 ############################# extend demo data #################################
 demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
@@ -463,7 +463,7 @@ plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
 #export plots
 ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
        height = 8.5, units = "in")
-ggsave("plots/10bin_difftrunc.pdf", plots_cps_10bin, width = 11,
+ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
        height = 8.5, units = "in")
 ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
        height = 8.5, units = "in")
