@@ -46,7 +46,11 @@ test_data <- lapply(file.list, function(x){
 ##which is then searched for within the dataset
 ##y is optional, input 1 so the value 'left' to the searched cell is extracted,
 ##instead of the default: 'right'
-regex_s <- function (df,x,y=0){
+regex_s <- function (df,x,y=0,unit="kg"){
+  
+  if (unit != "kg" & unit != "lb") {
+    stop("Invalid value for unit. Must be 'kg' or 'lbs'.")
+  }
   ##Find column name and row index of demographics with regex
   ##Outputs a list with elemts containing row index and the name of the
   ##elements containing the columnname!
@@ -58,11 +62,11 @@ regex_s <- function (df,x,y=0){
   tmp_col <- as.integer(which(tmp != 0))
   ##Find row index within list using column index
   tmp_row <- as.integer(tmp[tmp_col])
-  ##special case weight
-  if(x=="weight"){tmp_col <- str_which(tolower(df[tmp_row]), "kg") - 1}
+  ##special case weight, z specifies unit, default "kg"
+  if(grepl("weight", x)){tmp_col <- str_which(tolower(df[tmp_row]), unit) - 1}
   ##Should the value be left of the demographics' name
   else if(y=="1"){tmp_col <- tmp_col - 1}
-  ##Should the value be right to the demographics' name
+  ##Should the value be right to the demographics' name (default)
   else{tmp_col <- tmp_col + 1}
   ##extract from dataframe using both indices
   as.character(df[tmp_row, ..tmp_col]
@@ -79,7 +83,7 @@ demo_data <- lapply(test_data, function(df) {
   NAME <- regex_s(df,"\\bname\\b")
   AGE <- regex_s(df,"\\bage\\b")
   SEX <- regex_s(df,"\\bsex\\b")
-  MASS <- regex_s(df,"\\bweight\\b")
+  MASS <- regex_s(df,"\\bweight\\b",unit="kg")
   PB <- regex_s(df,"^(?=.*(baro))(?=.*(press)).*$")
   TEMP <- regex_s(df,"^(?=.*(insp))(?=.*(temp)).*$")
   RH <- regex_s(df,"^(?=.*(insp))(?=.*(humid)).*$")
@@ -99,7 +103,7 @@ demo_data <- lapply(test_data, function(df) {
 ##apply over both lists
 demo_data <- mapply(df = demo_data, x = file.list, SIMPLIFY = F,
   FUN = function(df,x){
-  dat <- lubridate::as_date(str_extract(x, "\\d{8}"))
+  dat <- lubridate::ymd(str_extract(x, "\\d{8}"))
   df$TEST_DAT <- dat
   df
   })
@@ -449,7 +453,7 @@ plist_cps_func <- function(test_data,cps_data){
 }
 
 #create plots
-plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
+plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin
 plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
 plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
 plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
