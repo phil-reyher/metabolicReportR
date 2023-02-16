@@ -1,25 +1,34 @@
 ---
-output: pdf_document
-header-includes:
-   - \usepackage{amsmath}
-   - \usepackage{tabularx}
-   - \usepackage{fancyhdr}
-   - \usepackage{graphicx}
-   - \lhead{\includegraphics[width=0.25\textwidth]{logo.svg}}
-   - \setlength{\headheight}{30pt}
+output: 
+  pdf_document:
+    keep_tex: true
+    includes:
+      in_header: header.tex
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 load(file = ".RData") 
 ```
+
 \begin{center}
 \textbf{\large \textbf{La Trobe Performance Hub} }
 \end{center}
 \vspace{2em}
 \begin{tabularx}{\textwidth}{r c}
 \textbf{Athlete Name:} & `r dem$NAME`\\
-\textbf{Date of Birth:} & `r dem$TEST_DAT`\\
+\textbf{Date of Birth:} & `r format(dem$TEST_DAT, format = "%d-%b-%Y")`\\
 \textbf{Sport:} & \\
 \end{tabularx}
+
+\fancysection{Test Details}
+
+\fancysection{Anthropometry Data}
+
+\fancysection{Summary Data}
+
+\fancysection{GXT Data}
+
+\fancysection{Training Zones Modified Allen \& Coggan}
+
 
 
