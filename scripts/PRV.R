@@ -22,6 +22,7 @@ library(ggplot2)
 library(signal)
 library(gridExtra)
 library(grid)
+library(magrittr)
 #################################### Import ####################################
 
 ##get dir that script is in
@@ -231,7 +232,7 @@ test_data_sec <- lapply(test_data_trunc, function(df){
     data_num <- df %>%
       dplyr::select(where(is.numeric))
     
-      out <- lapply(data_num, function (i) approx(
+      out <- lapply(data_num, \(i) approx(
         x = data_num[[1]],
         y = i,
         xout = seq(min(data_num[[1]]), max(data_num[[1]], na.rm = TRUE), 1)
@@ -251,27 +252,27 @@ test_data_10bin <- lapply(test_data_sec, function(df){
     dplyr::select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, function(x) round(x / 10) * 10)) %>%
+    dplyr::group_by(across(1, \(x) round(x / 10) * 10)) %>%
     dplyr::summarise_all(mean, na.rm = TRUE)
 })
 
 test_data_5bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select_if(is.numeric)
+    dplyr::select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, function(x) round(x / 5) * 5)) %>%
+    dplyr::group_by(across(1, \(x) round(x / 5) * 5)) %>%
     dplyr::summarise_all(mean, na.rm = TRUE)
 })
 
 test_data_15bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select_if(is.numeric)
+    dplyr::select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, function(x) round(x / 15) * 15)) %>%
+    dplyr::group_by(across(1, \(x) round(x / 15) * 15)) %>%
     dplyr::summarise_all(mean, na.rm = TRUE)
 })
 
@@ -453,7 +454,7 @@ plist_cps_func <- function(test_data,cps_data){
 }
 
 #create plots
-plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin
+plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
 plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
 plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
 plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
@@ -475,6 +476,10 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
        height = 8.5, units = "in")
 
 ############################# Table summary ####################################
+percent <- function(x, digits = 2, format = "f", ...) {
+  formatC(x * 100, format = format, digits = digits, ...)
+}
+
 tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
                   FUN = function(cp,dem){
   
@@ -492,7 +497,26 @@ tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
   pivot_wider(id_cols =THRESHOLD, names_from = var, values_from = value,
               names_repair = "check_unique")
   
+  cp <- cp %>% mutate(across(ends_with("PERC",ignore.case =T), ~percent(.) ) )
+  
   cp
+})
+
+test_data <- lapply(test_data, function(df){
+  
+  df$VO2MAX_PERC <- df$VO2_REL/max(df$VO2_REL)
+  df$HRMAX_PERC <- df$HR/max(df$HR)
+  df
+})
+
+gxt_data <- lapply(test_data, function(df){
+  
+  out <- df %>% select(WORK,VO2_REL,HR,VO2MAX_PERC,HRMAX_PERC) %>%
+    group_by(across(WORK,\(x) round(x/25)*25)) %>%
+    summarise_all(mean, na.rm=TRUE) %>%
+    mutate(across(ends_with("PERC",ignore.case =T), ~percent(.) ) )
+  
+  out
 })
 
 ########################### Coggan Power Zones #################################
