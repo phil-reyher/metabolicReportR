@@ -8,6 +8,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 load(file = ".RData") 
+library(kableExtra)
+library(tidyverse) 
+library(magrittr)
+options(digits=2)
+options(knitr.table.format = "latex")
+
 ```
 
 \begin{center}
@@ -25,8 +31,24 @@ load(file = ".RData")
 \fancysection{Anthropometry Data}
 
 \fancysection{Summary Data}
-
+```{r, echo=FALSE}
+cp %>% select(THRESHOLD,VO2:HRPERC) %>%
+   set_colnames(c("Threshold","$VO_2$","Work","Heart Rate","$VO_2 (\\%)$",
+                    "Work (\\%)", "Heart Rate (\\%)" ) ) %>% 
+  kbl( booktabs = T, escape = FALSE) %>% 
+  kable_styling(latex_options=c("HOLD_position"))
+```
 \fancysection{GXT Data}
+```{r, echo=FALSE}
+
+gxt %>%
+  set_colnames(c("Power","$VO_2$(mL/kg/min)","Heart Rate (beats/min)","$VO_{2max} (\\%)$",
+                 "$HR_{max} (\\%)$" ) ) %>% 
+  kbl( booktabs = T, escape = FALSE) %>% 
+  kable_styling(latex_options=c("HOLD_position","striped"))
+
+
+```
 
 \fancysection{Training Zones Modified Allen \& Coggan}
 
