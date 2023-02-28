@@ -24,7 +24,6 @@ library(gridExtra)
 library(grid)
 library(magrittr)
 #################################### Import ####################################
-
 ##get dir that script is in
 dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -337,15 +336,15 @@ cps_input <- function(test_data){
   VT2_TIME <- df$TIME_S[VT2_I]
   VT1_VO2 <- df$VO2_ABS[VT1_I]
   VT2_VO2 <- df$VO2_ABS[VT2_I]
-  VT1_WORK <- df$WORK[VT1_I]
-  VT2_WORK <- df$WORK[VT2_I]
+  VT1_WORK <- round(df$WORK[VT1_I]/25)*25
+  VT2_WORK <- round(df$WORK[VT2_I]/25)*25
   VT1_HR <- df$HR[VT1_I]
   VT2_HR <- df$HR[VT2_I]
   
   VT1_VO2PERC <- df$VO2_ABS[VT1_I]
   VT2_VO2PERC <- df$VO2_ABS[VT2_I]
-  VT1_WORKPERC <- df$WORK[VT1_I]
-  VT2_WORKPERC <- df$WORK[VT2_I]
+  VT1_WORKPERC <- VT1_WORK
+  VT2_WORKPERC <- VT2_WORK
   VT1_HRPERC <- df$HR[VT1_I]
   VT2_HRPERC <- df$HR[VT2_I]
   
@@ -476,9 +475,7 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
        height = 8.5, units = "in")
 
 ############################# Table summary ####################################
-percent <- function(x, digits = 2, format = "f", ...) {
-  formatC(x * 100, format = format, digits = digits, ...)
-}
+
 
 tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
                   FUN = function(cp,dem){
@@ -497,24 +494,24 @@ tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
   pivot_wider(id_cols =THRESHOLD, names_from = var, values_from = value,
               names_repair = "check_unique")
   
-  cp <- cp %>% mutate(across(ends_with("PERC",ignore.case =T), ~percent(.) ) )
+  cp <- cp %>% mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
   
   cp
 })
 
-test_data <- lapply(test_data, function(df){
+test_data_10bin <- lapply(test_data_10bin, function(df){
   
   df$VO2MAX_PERC <- df$VO2_REL/max(df$VO2_REL)
   df$HRMAX_PERC <- df$HR/max(df$HR)
   df
 })
 
-gxt_data <- lapply(test_data, function(df){
+gxt_data <- lapply(test_data_10bin, function(df){
   
   out <- df %>% select(WORK,VO2_REL,HR,VO2MAX_PERC,HRMAX_PERC) %>%
     group_by(across(WORK,\(x) round(x/25)*25)) %>%
     summarise_all(mean, na.rm=TRUE) %>%
-    mutate(across(ends_with("PERC",ignore.case =T), ~percent(.) ) )
+    mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
   
   out
 })
@@ -545,17 +542,14 @@ zones <- lapply(demo_data, function(df){
   lvl5_hr <- round(df$HRMAX*1.06) %>% as.character(.)
 
   
-  lvl1 <- c(1,"Active Recovery",paste0(" < ",lvl1_work),paste0(" < ",lvl1_hr))
-  lvl2 <- c(2,"Endurance",paste(lvl2_work_low,lvl2_work_up,sep = ' - '),
-            paste(lvl2_hr_low,lvl2_hr_up,sep = ' - ') )
-  lvl3 <- c(3,"Tempo",paste(lvl3_work_low,lvl3_work_up,sep = ' - '),
-            paste(lvl3_hr_low,lvl3_hr_up,sep = ' - ') )
-  lvl4 <- c(4,"Lactate Threshold",paste(lvl4_work_low,lvl4_work_up,sep = ' - '),
-            paste(lvl4_hr_low,lvl4_hr_up,sep = ' - ') )
-  lvl5 <- c(5,"VO2 Max",paste(lvl5_work_low,lvl5_work_up,sep = ' - '),
-            paste0(" > ",lvl5_hr) )
+  lvl1 <- c(1,"Active Recovery","",lvl1_work,"",lvl1_hr)
+  lvl2 <- c(2,"Endurance",lvl2_work_low,lvl2_work_up,lvl2_hr_low,lvl2_hr_up)
+  lvl3 <- c(3,"Tempo",lvl3_work_low,lvl3_work_up, lvl3_hr_low,lvl3_hr_up )
+  lvl4 <- c(4,"Lactate Threshold",lvl4_work_low,lvl4_work_up, lvl4_hr_low,lvl4_hr_up )
+  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up," ",lvl5_hr) 
   tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5))
-  colnames(tr_zones) <- c("Level","Name","Average Power","Average HR")
+  colnames(tr_zones) <- c("Zone","Intensity","Lower Range","Upper Range",
+                          "Lower Range","Upper Range")
   rownames(tr_zones) <- NULL
   out <- tr_zones
   out
