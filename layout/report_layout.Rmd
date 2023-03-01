@@ -28,19 +28,19 @@ options(knitr.table.format = "latex")
 
 \fancysection{Test Details}
 
-\fancysection{Anthropometry Data}
 
 \fancysection{Summary Data}
 ```{r, echo=FALSE}
-cp %>% select(THRESHOLD,VO2:HRPERC) %>%
+cp %>% select(VARIABLE,VO2ABS:HRPERC) %>% 
   kbl( booktabs = T, escape = FALSE,digits = 1,align = "c",
-       col.names= c("Variable","VO\\textsubscript{2} \\par (mL/kg/min)",
+       col.names= c("Variable","VO\\textsubscript{2} \\par (L/min)",
+                    "VO\\textsubscript{2} \\par (mL/kg/min)",
                    "Power \\par (W)","Heart Rate \\par (beats/min)",
                    "VO\\textsubscript{2} \\par (\\%)","Power \\par (\\%)",
                    "Heart Rate \\par (\\%)" ) ) %>% 
   kable_styling(latex_options = c("HOLD_position")) %>% 
-  column_spec(2:7,width = "\\\\dimexpr0.95\\\\textwidth/7\\\\relax") %>% 
-  column_spec(1,width = "\\\\dimexpr1.3\\\\textwidth/7\\\\relax")
+  column_spec(2:8,width = "\\\\dimexpr0.95\\\\textwidth/8\\\\relax") %>% 
+  column_spec(1,width = "\\\\dimexpr1.35\\\\textwidth/8\\\\relax")
 ```
 \fancysection{GXT Data}
 ```{r, echo=FALSE}
@@ -51,7 +51,7 @@ gxt %>%
                  "HR\\textsubscript{max} \\par (\\%)") ) %>% 
   column_spec(1:5, width = "\\\\dimexpr\\\\textwidth/5\\\\relax") %>% 
   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
-  row_spec(which(gxt$WORK %in% cp$WORK),bold = T,background = "#ee3124",color="white") %>% 
+  row_spec(which(gxt$WORK %in% cp$WORK[2:3]),bold = T,background = "#ee3124",color="white") %>% 
     kable_styling(latex_options=c("HOLD_position"))
 
 
