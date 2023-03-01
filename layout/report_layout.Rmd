@@ -20,11 +20,14 @@ options(knitr.table.format = "latex")
 \textbf{\large \textbf{La Trobe Performance Hub} }
 \end{center}
 \vspace{2em}
-\begin{tabularx}{\textwidth}{r c}
+\begingroup
+\setlength{\tabcolsep}{0.5em}
+\begin{tabularx}{\textwidth}{r l}
 \textbf{Athlete Name:} & `r dem$NAME`\\
 \textbf{Date of Birth:} & `r format(dem$TEST_DAT, format = "%d-%b-%Y")`\\
 \textbf{Sport:} & \\
 \end{tabularx}
+\endgroup
 
 \fancysection{Test Details}
 
@@ -39,8 +42,9 @@ cp %>% select(VARIABLE,VO2ABS:HRPERC) %>%
                    "VO\\textsubscript{2} \\par (\\%)","Power \\par (\\%)",
                    "Heart Rate \\par (\\%)" ) ) %>% 
   kable_styling(latex_options = c("HOLD_position")) %>% 
-  column_spec(2:8,width = "\\\\dimexpr0.95\\\\textwidth/8\\\\relax") %>% 
-  column_spec(1,width = "\\\\dimexpr1.35\\\\textwidth/8\\\\relax")
+  row_spec(seq(1,nrow(cp),2), background="#fff3f3") %>% 
+  column_spec(2:8,width = "\\\\dimexpr0.95\\\\textwidth/8\\\\relax",latex_valign = "m") %>% 
+  column_spec(1,width = "\\\\dimexpr1.35\\\\textwidth/8\\\\relax",latex_valign = "m")
 ```
 \fancysection{GXT Data}
 ```{r, echo=FALSE}
