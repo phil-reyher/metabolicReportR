@@ -16,8 +16,8 @@
 ################################################################################
 ################################### Packages ###################################
 library(readxl)
-library(tidyverse)
 library(data.table)
+library(tidytable)
 library(ggplot2)
 library(signal)
 library(gridExtra)
@@ -95,7 +95,7 @@ demo_data <- lapply(test_data, function(df) {
   ifelse(is_empty(EV_CD)==1,EV_CD <- NA,EV_CD)
   
   df1 <- data.frame(NAME, AGE, SEX, MASS, PB, TEMP, RH, EV_WU, EV_EX, EV_CD)
-  df1 <- df1 %>% dplyr::select(where(~any(!is.na(.))))
+  df1 <- df1 %>% select(where(~any(!is.na(.))))
   })
   
 ##function to extract the dates from file.list and append it to the demographics
@@ -206,10 +206,6 @@ demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                       end <- which.max(df$TIME_S >= ev_cd)
                       dem$EV_EX_I <- beg
                       dem$EV_CD_I <- end
-                      dem$VO2MAX_ABS <- max(df$VO2_ABS_LOW)
-                      dem$VO2MAX_REL <- max(df$VO2_REL_LOW)
-                      dem$HRMAX <- max(df$HR)
-                      dem$WORKMAX <- max(df$WORK)
                       dem
                     })
 
@@ -224,12 +220,12 @@ test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
 
 ############################ Interpolation, Binning ############################
 
-##5point
+#
 test_data_sec <- lapply(test_data_trunc, function(df){
   interpolate <- function(df) {
     ## first make sure data only contains numeric columns
     data_num <- df %>%
-      dplyr::select(where(is.numeric))
+      select(where(is.numeric))
     
       out <- lapply(data_num, \(i) approx(
         x = data_num[[1]],
@@ -248,31 +244,37 @@ test_data_sec <- lapply(test_data_trunc, function(df){
 test_data_10bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select(where(is.numeric))
+    select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, \(x) round(x / 10) * 10)) %>%
-    dplyr::summarise_all(mean, na.rm = TRUE)
+    mutate(across(1,\(x) round(x / 10) * 10)) %>% 
+    group_by(1) %>%
+    summarise(across(everything(),mean, na.rm = TRUE) )
+  out
 })
 
 test_data_5bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select(where(is.numeric))
+    select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, \(x) round(x / 5) * 5)) %>%
-    dplyr::summarise_all(mean, na.rm = TRUE)
+    mutate(across(1,\(x) round(x / 5) * 5)) %>% 
+    group_by(1) %>%
+    summarise(across(everything(),mean, na.rm = TRUE) )
+  out
 })
 
 test_data_15bin <- lapply(test_data_sec, function(df){
   
   data_num <- df %>%
-    dplyr::select(where(is.numeric))
+    select(where(is.numeric))
   
   out <- data_num %>%
-    dplyr::group_by(across(1, \(x) round(x / 15) * 15)) %>%
-    dplyr::summarise_all(mean, na.rm = TRUE)
+    mutate(across(1,\(x) round(x / 15) * 15)) %>% 
+    group_by(1) %>%
+    summarise(across(everything(),mean, na.rm = TRUE) )
+  out
 })
 
 ####################### Calculation of VT1, VT2 ################################
@@ -317,7 +319,7 @@ cps_input <- function(test_data){
   ##breakpointanalyses
   ##VT1##
   ##V-Slope##
-  vslop <- df_vt1 %>% select(VO2_ABS,VCO2) %>% as.matrix(.) %>% t(.)
+  vslop <- df_vt1 %>% select(VO2_ABS_LOW,VCO2_LOW) %>% as.matrix(.) %>% t(.)
   VT1VSLOP_I <- findchangepts_std(vslop)+vt1_i_beg-1
   #EXCO2##
   exco2 <- df_vt1 %>% select(EXCO2) %>% as.matrix(.) %>% t(.)
@@ -334,10 +336,10 @@ cps_input <- function(test_data){
   VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
   VT1_TIME <- df$TIME_S[VT1_I]
   VT2_TIME <- df$TIME_S[VT2_I]
-  VT1_VO2_ABS <- df$VO2_ABS[VT1_I]
-  VT2_VO2_ABS <- df$VO2_ABS[VT2_I]
-  VT1_VO2_REL <- df$VO2_REL[VT1_I]
-  VT2_VO2_REL <- df$VO2_REL[VT2_I]
+  VT1_VO2ABS <- df$VO2_ABS[VT1_I]
+  VT2_VO2ABS <- df$VO2_ABS[VT2_I]
+  VT1_VO2REL <- df$VO2_REL[VT1_I]
+  VT2_VO2REL <- df$VO2_REL[VT2_I]
   VT1_WORK <- round(df$WORK[VT1_I]/25)*25
   VT2_WORK <- round(df$WORK[VT2_I]/25)*25
   VT1_HR <- df$HR[VT1_I]
@@ -350,9 +352,10 @@ cps_input <- function(test_data){
   VT1_HRPERC <- df$HR[VT1_I]
   VT2_HRPERC <- df$HR[VT2_I]
   
-  df <- data.frame(VT1EXCO2_I, VT1VSLOP_I,VT2EXVE_I, VT2VSLOP_I,VT1_I,VT2_I,
-                   VT1_TIME,VT2_TIME,VT1_VO2,VT2_VO2,VT1_WORK,VT2_WORK,VT1_HR,
-                   VT2_HR,VT1_VO2PERC,VT2_VO2PERC,VT1_WORKPERC,VT2_WORKPERC,
+  df <- data.frame(VT1EXCO2_I, VT1VSLOP_I,VT2EXVE_I, VT2VSLOP_I,
+                   VT1_I,VT2_I,  VT1_TIME,VT2_TIME,  VT1_VO2ABS,VT2_VO2ABS,
+                   VT1_VO2REL,VT2_VO2REL,  VT1_WORK,VT2_WORK,  VT1_HR,VT2_HR,
+                   VT1_VO2PERC,VT2_VO2PERC,  VT1_WORKPERC,VT2_WORKPERC,  
                    VT1_HRPERC,VT2_HRPERC)
   df
     })
@@ -476,29 +479,64 @@ ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
 ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
        height = 8.5, units = "in")
 
+################################# Test Details #################################
+
+details_tbl <- lapply(demo_data,funcion(dem){
+  
+  out <- dem %>% select(TEST_DAT,TEMP,RH,PB) %>%
+    mutate(across(TEST_DAT,~format(.x, format = "%d-%b-%Y")))
+  out
+})
+
+
+
 ############################# Table summary ####################################
 
-tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
-                  FUN = function(cp,dem){
+max_tbl <- lapply(test_data, function(df){
   
-  cp$VT1_VO2PERC <- cp$VT1_VO2PERC/dem$VO2MAX_ABS
-  cp$VT2_VO2PERC <- cp$VT2_VO2PERC/dem$VO2MAX_ABS
+  MAX_I <- which.max(df$VO2_ABS_LOW)
+  MAX_TIME <- df$TIME_S[MAX_I]
+  MAX_VO2ABS <- max(df$VO2_ABS_LOW)
+  MAX_VO2REL <- max(df$VO2_REL_LOW)
+  MAX_WORK <- round(max(df$WORK)/25)*25
+  MAX_HR <- max(df$HR)
   
-  cp$VT1_WORKPERC <- cp$VT1_WORKPERC/dem$WORKMAX
-  cp$VT2_WORKPERC <- cp$VT2_WORKPERC/dem$WORKMAX
+  MAX_VO2PERC <- 1
+  MAX_WORKPERC <- 1
+  MAX_HRPERC <- 1
   
-  cp$VT1_HRPERC <- cp$VT1_HRPERC/dem$HRMAX
-  cp$VT2_HRPERC <- cp$VT2_HRPERC/dem$HRMAX
+  df <- data.frame(MAX_I,MAX_TIME,MAX_VO2ABS,MAX_VO2REL,MAX_WORK,MAX_HR,
+                   MAX_VO2PERC,MAX_WORKPERC,MAX_HRPERC)
+  df
+  
+})
+
+summary_tbl <- mapply(cp=cps_10bin,max=max_tbl,SIMPLIFY = F,
+                  FUN = function(cp,max){
+  
+  cp$VT1_VO2PERC <- cp$VT1_VO2PERC/max$MAX_VO2ABS
+  cp$VT2_VO2PERC <- cp$VT2_VO2PERC/max$MAX_VO2ABS
+  
+  cp$VT1_WORKPERC <- cp$VT1_WORKPERC/max$MAX_WORK
+  cp$VT2_WORKPERC <- cp$VT2_WORKPERC/max$MAX_WORK
+  
+  cp$VT1_HRPERC <- cp$VT1_HRPERC/max$MAX_HR
+  cp$VT2_HRPERC <- cp$VT2_HRPERC/max$MAX_HR
+  
+  cp <- cbind(cp,max)
   
   cp <- select(cp, -c(VT1EXCO2_I,VT1VSLOP_I,VT2VSLOP_I,VT2EXVE_I)) %>%
-  pivot_longer(everything(),names_sep = "_",names_to = c("THRESHOLD","var")) %>%
-  pivot_wider(id_cols =THRESHOLD, names_from = var, values_from = value,
+  pivot_longer(everything(),names_sep = "_",
+               names_to = c("VARIABLE","measurement")) %>%
+  pivot_wider(id_cols =VARIABLE, names_from = measurement, values_from = value,
               names_repair = "check_unique")
   
   cp <- cp %>% mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
   
   cp
 })
+
+#################################### GXT Table #################################
 
 test_data_10bin <- lapply(test_data_10bin, function(df){
   
@@ -507,47 +545,49 @@ test_data_10bin <- lapply(test_data_10bin, function(df){
   df
 })
 
-gxt_data <- lapply(test_data_10bin, function(df){
+
+gxt_tbl <- lapply(test_data_10bin, function(df){
   
   out <- df %>% select(WORK,VO2_REL,HR,VO2MAX_PERC,HRMAX_PERC) %>%
-    group_by(across(WORK,\(x) round(x/25)*25)) %>%
-    summarise_all(mean, na.rm=TRUE) %>%
+    mutate(across(WORK,\(x) round(x/25)*25)) %>% 
+    group_by(WORK) %>% 
+    summarise(across(everything(),mean) ) %>%
     mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
   
   out
 })
 
 ########################### Coggan Power Zones #################################
-zones <- lapply(demo_data, function(df){
+zone_tbl <- lapply(demo_data, function(df){
   
-  lvl1_work <- round(df$WORKMAX*0.55) %>% as.character(.)
-  lvl1_hr <- round(df$HRMAX*0.68) %>% as.character(.)
+  lvl1_work <- round(df$WORKMAX*0.55)
+  lvl1_hr <- round(df$HRMAX*0.68)
   
-  lvl2_work_low <- round(df$WORKMAX*0.56) %>% as.character(.)
-  lvl2_work_up <- round(df$WORKMAX*0.75) %>% as.character(.)
-  lvl2_hr_low <- round(df$HRMAX*0.69) %>% as.character(.)
-  lvl2_hr_up <- round(df$HRMAX*0.83) %>% as.character(.)
+  lvl2_work_low <- round(df$WORKMAX*0.56)
+  lvl2_work_up <- round(df$WORKMAX*0.75)
+  lvl2_hr_low <- round(df$HRMAX*0.69)
+  lvl2_hr_up <- round(df$HRMAX*0.83)
   
-  lvl3_work_low <- round(df$WORKMAX*0.76) %>% as.character(.)
-  lvl3_work_up <- round(df$WORKMAX*0.90) %>% as.character(.)
-  lvl3_hr_low <- round(df$HRMAX*0.84) %>% as.character(.)
-  lvl3_hr_up <- round(df$HRMAX*0.94) %>% as.character(.)
+  lvl3_work_low <- round(df$WORKMAX*0.76)
+  lvl3_work_up <- round(df$WORKMAX*0.90)
+  lvl3_hr_low <- round(df$HRMAX*0.84)
+  lvl3_hr_up <- round(df$HRMAX*0.94)
   
-  lvl4_work_low <- round(df$WORKMAX*0.91) %>% as.character(.)
-  lvl4_work_up <- round(df$WORKMAX*1.05) %>% as.character(.)
-  lvl4_hr_low <- round(df$HRMAX*0.95) %>% as.character(.)
-  lvl4_hr_up <- round(df$HRMAX*1.05) %>% as.character(.)
+  lvl4_work_low <- round(df$WORKMAX*0.91)
+  lvl4_work_up <- round(df$WORKMAX*1.05)
+  lvl4_hr_low <- round(df$HRMAX*0.95)
+  lvl4_hr_up <- round(df$HRMAX*1.05)
   
-  lvl5_work_low <- round(df$WORKMAX*1.06) %>% as.character(.)
-  lvl5_work_up <- round(df$WORKMAX*1.2) %>% as.character(.)
-  lvl5_hr <- round(df$HRMAX*1.06) %>% as.character(.)
+  lvl5_work_low <- round(df$WORKMAX*1.06)
+  lvl5_work_up <- round(df$WORKMAX*1.2)
+  lvl5_hr <- round(df$HRMAX*1.06)
 
   
   lvl1 <- c(1,"Active Recovery","",lvl1_work,"",lvl1_hr)
   lvl2 <- c(2,"Endurance",lvl2_work_low,lvl2_work_up,lvl2_hr_low,lvl2_hr_up)
   lvl3 <- c(3,"Tempo",lvl3_work_low,lvl3_work_up, lvl3_hr_low,lvl3_hr_up )
   lvl4 <- c(4,"Lactate Threshold",lvl4_work_low,lvl4_work_up, lvl4_hr_low,lvl4_hr_up )
-  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up," ",lvl5_hr) 
+  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up," ",lvl5_hr)
   tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5))
   colnames(tr_zones) <- c("Zone","Intensity","Lower Range","Upper Range",
                           "Lower Range","Upper Range")
@@ -616,6 +656,11 @@ p <-  ggplot(df,aes(x=TIME_S))+
 ex_plotlist <- marrangeGrob(ex_plots, nrow=1,ncol=1)
 ggsave("multipage.pdf", ex_plotlist, width = 11, height = 8.5, units = "in")
 
+
+
+plot(df$TIME_S,df$VO2_ABS_LOW,type = 'l')
+lines(bin$TIME_S,bin$VO2_ABS,type = 'l',col='red')
+lines(bin$TIME_S,bin$VO2_ABS_LOW, type= 'l', col='blue')
 
 
 biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
