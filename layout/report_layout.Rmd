@@ -34,7 +34,7 @@ options(knitr.table.format = "latex")
 ```{r, echo=FALSE}
 cp %>% select(THRESHOLD,VO2:HRPERC) %>%
   kbl( booktabs = T, escape = FALSE,digits = 1,align = "c",
-       col.names= c("Threshold","VO\\textsubscript{2} \\par (mL/kg/min)",
+       col.names= c("Variable","VO\\textsubscript{2} \\par (mL/kg/min)",
                    "Power \\par (W)","Heart Rate \\par (beats/min)",
                    "VO\\textsubscript{2} \\par (\\%)","Power \\par (\\%)",
                    "Heart Rate \\par (\\%)" ) ) %>% 
