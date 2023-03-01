@@ -334,8 +334,10 @@ cps_input <- function(test_data){
   VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
   VT1_TIME <- df$TIME_S[VT1_I]
   VT2_TIME <- df$TIME_S[VT2_I]
-  VT1_VO2 <- df$VO2_ABS[VT1_I]
-  VT2_VO2 <- df$VO2_ABS[VT2_I]
+  VT1_VO2_ABS <- df$VO2_ABS[VT1_I]
+  VT2_VO2_ABS <- df$VO2_ABS[VT2_I]
+  VT1_VO2_REL <- df$VO2_REL[VT1_I]
+  VT2_VO2_REL <- df$VO2_REL[VT2_I]
   VT1_WORK <- round(df$WORK[VT1_I]/25)*25
   VT2_WORK <- round(df$WORK[VT2_I]/25)*25
   VT1_HR <- df$HR[VT1_I]
@@ -476,7 +478,6 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
 
 ############################# Table summary ####################################
 
-
 tbl_sum <- mapply(cp=cps_10bin,dem=demo_data,SIMPLIFY = F,
                   FUN = function(cp,dem){
   
@@ -572,14 +573,11 @@ library(blandr)
 
 ##################################### WIP ######################################
 
-mapply(df = test_data, cp = changepoints, 
-       FUN = function(df,cp){
+mapply(df = test_data, bin = test_data_10bin, 
+       FUN = function(df,bin){
          
          
-         vt1 <- cp$VT1_VO2/max(df$VO2_ABS)
-         vt2 <- cp$VT2_VO2/max(df$VO2_ABS)
          
-         df <- tibble(vt1,vt2)
        })
 
 
