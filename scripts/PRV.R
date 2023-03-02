@@ -481,12 +481,12 @@ ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
 
 ################################# Test Details #################################
 
-details_tbl <- lapply(demo_data,funcion(dem){
+details_tbl <- lapply(demo_data,function(dem){
   
   out <- dem %>% select(TEST_DAT,TEMP,RH,PB) %>%
     mutate(across(TEST_DAT,~format(.x, format = "%d-%b-%Y")))
   out
-})
+  })
 
 
 
