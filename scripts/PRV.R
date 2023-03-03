@@ -258,9 +258,9 @@ bin <- function(df,bin){
 
 test_data_10bin <- lapply(test_data_sec, \(df) bin(df,10) )
 
-test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
+#test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
 
-test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
+#test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
 
 ####################### Calculation of VT1, VT2 ################################
 
@@ -324,7 +324,7 @@ cps_input <- function(test_data){
   VT1_VO2ABS <- df$VO2_ABS_LOW[VT1_I]
   VT2_VO2ABS <- df$VO2_ABS_LOW[VT2_I]
   VT1_VO2REL <- df$VO2_REL_LOW[VT1_I]
-  VT2_VO2REL <- df$VO2_RELLOW[VT2_I]
+  VT2_VO2REL <- df$VO2_REL_LOW[VT2_I]
   VT1_WORK <- round(df$WORK[VT1_I]/25)*25
   VT2_WORK <- round(df$WORK[VT2_I]/25)*25
   VT1_HR <- df$HR[VT1_I]
@@ -527,7 +527,7 @@ summary_tbl <- mapply(cp=cps_10bin,max=max_tbl,SIMPLIFY = F,
 
 test_data_10bin <- lapply(test_data_10bin, function(df){
   
-  df$VO2MAX_PERC <- df$VO2_REL/max(df$VO2_REL)
+  df$VO2MAX_PERC <- df$VO2_REL_LOW/max(df$VO2_REL_LOW)
   df$HRMAX_PERC <- df$HR/max(df$HR)
   df
 })
