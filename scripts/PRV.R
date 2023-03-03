@@ -95,11 +95,11 @@ demo_data <- lapply(test_data, function(df) {
   TEMP <- regex_s(df,"^(?=.*(insp))(?=.*(temp)).*$")
   RH <- regex_s(df,"^(?=.*(insp))(?=.*(humid)).*$")
   EV_WU <- regex_s(df,"^(?=.*(warm))(?=.*(up)).*$",1)
-  ifelse(is_empty(EV_WU)==1,EV_WU <- NA,EV_WU)
+  ifelse(length(EV_WU)==0,EV_WU <- NA,EV_WU)
   EV_EX <- regex_s(df,"^(?=.*(start))(?=.*(exercise)).*$",1)
-  ifelse(is_empty(EV_EX)==1,EV_EX <- NA,EV_EX)
+  ifelse(length(EV_EX)==0,EV_EX <- NA,EV_EX)
   EV_CD <- regex_s(df,"^(?=.*(cool))(?=.*(down)).*$",1)
-  ifelse(is_empty(EV_CD)==1,EV_CD <- NA,EV_CD)
+  ifelse(length(EV_CD)==0,EV_CD <- NA,EV_CD)
   
   df1 <- data.frame(NAME, AGE, SEX, MASS, PB, TEMP, RH, EV_WU, EV_EX, EV_CD)
   df1 <- df1 %>% select(where(~any(!is.na(.))))
@@ -110,8 +110,8 @@ demo_data <- lapply(test_data, function(df) {
 ##apply over both lists
 demo_data <- mapply(df = demo_data, x = file.list, SIMPLIFY = F,
   FUN = function(df,x){
-  dat <- lubridate::ymd(str_extract(x, "\\d{8}"))
-  df$TEST_DAT <- dat
+  dat <- regmatches(x, regexpr("\\d{8}", x))
+  df$TEST_DAT <- as.Date(dat, format = "%Y%m%d")
   df
   })
 
@@ -562,29 +562,29 @@ gxt_tbl <- lapply(test_data_10bin, function(df){
 })
 
 ########################### Coggan Power Zones #################################
-zone_tbl <- lapply(demo_data, function(df){
+zone_tbl <- lapply(max_tbl, function(df){
   
-  lvl1_work <- round(df$WORKMAX*0.55)
-  lvl1_hr <- round(df$HRMAX*0.68)
+  lvl1_work <- round(df$MAX_WORK*0.55)
+  lvl1_hr <- round(df$MAX_HR*0.68)
   
-  lvl2_work_low <- round(df$WORKMAX*0.56)
-  lvl2_work_up <- round(df$WORKMAX*0.75)
-  lvl2_hr_low <- round(df$HRMAX*0.69)
-  lvl2_hr_up <- round(df$HRMAX*0.83)
+  lvl2_work_low <- round(df$MAX_WORK*0.56)
+  lvl2_work_up <- round(df$MAX_WORK*0.75)
+  lvl2_hr_low <- round(df$MAX_HR*0.69)
+  lvl2_hr_up <- round(df$MAX_HR*0.83)
   
-  lvl3_work_low <- round(df$WORKMAX*0.76)
-  lvl3_work_up <- round(df$WORKMAX*0.90)
-  lvl3_hr_low <- round(df$HRMAX*0.84)
-  lvl3_hr_up <- round(df$HRMAX*0.94)
+  lvl3_work_low <- round(df$MAX_WORK*0.76)
+  lvl3_work_up <- round(df$MAX_WORK*0.90)
+  lvl3_hr_low <- round(df$MAX_HR*0.84)
+  lvl3_hr_up <- round(df$MAX_HR*0.94)
   
-  lvl4_work_low <- round(df$WORKMAX*0.91)
-  lvl4_work_up <- round(df$WORKMAX*1.05)
-  lvl4_hr_low <- round(df$HRMAX*0.95)
-  lvl4_hr_up <- round(df$HRMAX*1.05)
+  lvl4_work_low <- round(df$MAX_WORK*0.91)
+  lvl4_work_up <- round(df$MAX_WORK*1.05)
+  lvl4_hr_low <- round(df$MAX_HR*0.95)
+  lvl4_hr_up <- round(df$MAX_HR*1.05)
   
-  lvl5_work_low <- round(df$WORKMAX*1.06)
-  lvl5_work_up <- round(df$WORKMAX*1.2)
-  lvl5_hr <- round(df$HRMAX*1.06)
+  lvl5_work_low <- round(df$MAX_WORK*1.06)
+  lvl5_work_up <- round(df$MAX_WORK*1.2)
+  lvl5_hr <- round(df$MAX_HR*1.06)
 
   
   lvl1 <- c(1,"Active Recovery","",lvl1_work,"",lvl1_hr)
