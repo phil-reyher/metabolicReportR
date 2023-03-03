@@ -3,14 +3,20 @@ output:
   pdf_document:
     keep_tex: true
     includes:
-      in_header: header.tex
+      in_header: additional_latex_styling.tex
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 load(file = ".RData") 
 library(kableExtra)
 library(tidytable)
 options(knitr.table.format = "latex")
+
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	error = FALSE
+)
 
 ```
 
@@ -30,7 +36,7 @@ options(knitr.table.format = "latex")
 \vspace{10ex}
 
 \fancysection{Test Details}
-```{r, echo=F}
+```{r}
 details %>% 
     mutate(across(2:4,~round(as.numeric(.),1) )) %>% 
   mutate(across(everything(),as.character)) %>% 
@@ -47,7 +53,7 @@ details %>%
 
 
 \fancysection{Summary Data}
-```{r, echo=FALSE}
+```{r}
 cp %>% select(VARIABLE,VO2ABS:HRPERC) %>% 
   mutate(across(where(is.numeric),~round(.,1))) %>% 
   mutate(across(everything(),as.character)) %>% 
@@ -64,7 +70,7 @@ cp %>% select(VARIABLE,VO2ABS:HRPERC) %>%
   column_spec(1,width = "\\\\dimexpr1.35\\\\textwidth/8\\\\relax")
 ```
 \fancysection{GXT Data}
-```{r, echo=FALSE}
+```{r}
 gxt %>%
     mutate(across(where(is.numeric),~round(.,1))) %>% 
   mutate(across(everything(),as.character)) %>% 
@@ -83,7 +89,7 @@ gxt %>%
 ```
 \newpage
 \fancysection{Training Zones Modified Allen \& Coggan}
-```{r,echo=F,message=F}
+```{r}
 coln <- colnames(zone)
 zone %>% 
   tidytable::mutate(across(.cols = everything(),as.character)) %>% 
