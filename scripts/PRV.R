@@ -54,22 +54,30 @@ regex_s <- function (df,x,y=0,unit="kg"){
   ##Outputs a list with elemts containing row index and the name of the
   ##elements containing the columnname!
   tmp <- sapply(df, function(col) {
-    str_which(col, regex(x, ignore_case = T))
+    grep(x,col,perl = T,ignore.case = T)
   })
   ##find column index within list as column name is impractical for the
   ##following steps
   tmp_col <- as.integer(which(tmp != 0))
+  
+  
+  if(all(sapply(tmp, is.null)) == 1){
+    return(NA_character_)
+    stop()
+  }
   ##Find row index within list using column index
   tmp_row <- as.integer(tmp[tmp_col])
   ##special case weight, z specifies unit, default "kg"
-  if(grepl("weight", x)){tmp_col <- str_which(tolower(df[tmp_row]), unit) - 1}
+  if(grepl("weight", x)){tmp_col <- grep(unit,tolower(df[tmp_row,])) - 1}
   ##Should the value be left of the demographics' name
   else if(y=="1"){tmp_col <- tmp_col - 1}
   ##Should the value be right to the demographics' name (default)
   else{tmp_col <- tmp_col + 1}
   ##extract from dataframe using both indices
-  as.character(df[tmp_row, ..tmp_col]
+  
+  return(as.character(df[tmp_row,..tmp_col])
   )}
+
 
 ##save participant names in array for later
 partnames <- sapply(test_data, function(df) {
@@ -110,49 +118,46 @@ demo_data <- mapply(df = demo_data, x = file.list, SIMPLIFY = F,
 ################################ Clean dataset #################################
 test_data <- lapply(test_data, function(df) {
   ##find indices of string "time", this is where the spiro data starts
-  tmp <- sapply(df, function(x) {
-  str_which(x, fixed("time", ignore_case = T))
-                                })
-  ##row index -1, as the current row is holding the headers
-  tmp <- as.numeric(tmp[which(tmp != 0)]) - 1
+  tmp <- which(sapply(df, function(x) {grepl("TIME",fixed = T,x)}) )-1
   ##finally remove the mess from the top
-  df <- df[-(1:tmp)]
+  df <- slice(df,-(1:tmp) )
   ##Column names
   ##combine the two header rows
-  coln <- paste(df[1],df[2],sep = "")
+  coln <- paste(df[1,],df[2,],sep = "")
   ## clean up NAs
   coln <- gsub("NA","",coln)
   ##remove whitespace
   coln <- gsub(" ","",coln)
   ##standardize colnames
-  coln <- str_replace(coln,regex("^(?=.*(VO2))(?=.*(kg)).*$",ignore_case = T),"VO2_REL")
-  coln <- str_replace(coln,regex("VO2STPD",ignore_case = T),"VO2_ABS")
-  coln <- str_replace(coln,regex(".*work.*",ignore_case = T),"WORK")
-  coln <- str_replace(coln,regex(".*hr.*",ignore_case = T),"HR")
-
+  coln <- sub("^(?=.*(VO2))(?=.*(kg)).*$","VO2_REL",coln,perl = T,
+              ignore.case = T)
+  coln <- sub("VO2STPD","VO2_ABS",coln,perl = T,ignore.case = T)
+  coln <- sub(".*work.*","WORK",coln,perl = T,ignore.case = T)
+  coln <- sub(".*hr.*","HR",coln,perl = T,ignore.case = T)
+  
   coln <- toupper(gsub("STPD","",coln))
   colnames(df) <- coln
   ##remove anything but data
-  df <- df[-(1:4)]
+  df <- slice(df,-(1:4) )
   ##find first and last instance of NA to remove mess at the bottom
   NAindex <- which(is.na(df[,1]))
   firstNA <- min(NAindex)
   l <- nrow(df)
-  df <- df[-(firstNA:l)]
+  df <- slice(df,-(firstNA:l) )
   ##convert time from m:s format to s
   TIME_S <- lubridate::ms(df$TIME)
   TIME_S <- lubridate::period_to_seconds(TIME_S)
-  df <- add_column(df, TIME_S, .after = "TIME") 
+  df <- cbind(df[, 1], TIME_S, df[, 2:ncol(df)])
   ##change to POSIXct for graphing later
   df$TIME <- as.POSIXct(strptime(df$TIME, format= "%M:%S"))
   ##convert all to numeric, to character first to preserve factors
   df <-df %>% mutate(across(.cols = !TIME, ~ as.character(.x) %>% 
-  as.numeric(.x) ) )
+                              as.numeric(.x) ) )
   ##rename problematic column names
   df <- df %>% rename('VE_VO2'=`VE/VO2`,'VE_VCO2'=`VE/VCO2`)
   
   df
-  })
+})
 
 ########################## Smoothing, computation of vars ######################
 test_data <- lapply(test_data,function(df) {
