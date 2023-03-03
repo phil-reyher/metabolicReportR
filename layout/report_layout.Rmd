@@ -9,9 +9,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 load(file = ".RData") 
 library(kableExtra)
-library(tidyverse) 
-library(magrittr)
-
+library(tidytable)
 options(knitr.table.format = "latex")
 
 ```
@@ -82,12 +80,12 @@ gxt %>%
 ```
 \newpage
 \fancysection{Training Zones Modified Allen \& Coggan}
-```{r,echo=F}
+```{r,echo=F,message=F}
 coln <- colnames(zone)
 zone %>% 
   tidytable::mutate(across(.cols = everything(),as.character)) %>% 
   tidytable::mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
-  set_colnames(coln) %>% 
+  `colnames<-`(coln) %>% 
   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c") %>% 
   add_header_above(c(" "=2, "Power Zones" = 2, "Heart Rate Zones" = 2)) %>%
   kable_styling(latex_options=c("HOLD_position")) %>% 

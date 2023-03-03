@@ -15,14 +15,12 @@
 #                                                                              #
 ################################################################################
 ################################### Packages ###################################
-library(readxl)
 library(data.table)
 library(tidytable)
 library(ggplot2)
 library(signal)
 library(gridExtra)
 library(grid)
-library(magrittr)
 #################################### Import ####################################
 ##get dir that script is in
 dir <- dirname(rstudioapi::getSourceEditorContext()$path)
