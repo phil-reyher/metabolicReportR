@@ -27,6 +27,8 @@ options(knitr.table.format = "latex")
 \end{tabularx}
 \endgroup
 
+\vspace{10ex}
+
 \fancysection{Test Details}
 ```{r, echo=F}
 details %>% 
@@ -74,7 +76,8 @@ gxt %>%
   column_spec(1:5, width = "\\\\dimexpr\\\\textwidth/5\\\\relax") %>% 
   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
   row_spec(which(gxt$WORK %in% cp$WORK[2:3]),bold = T,background = "#ee3124",color="white") %>% 
-    kable_styling(latex_options=c("HOLD_position"))
+    kable_styling(latex_options=c("HOLD_position")) %>% 
+  footnote(number = "Stages at which VT1 and VT2 occured are marked in red.")
 
 
 ```
