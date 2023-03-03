@@ -223,8 +223,7 @@ test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
                   })
 
 ############################ Interpolation, Binning ############################
-
-#
+#interpolation
 test_data_sec <- lapply(test_data_trunc, function(df){
   interpolate <- function(df) {
     ## first make sure data only contains numeric columns
@@ -244,42 +243,24 @@ test_data_sec <- lapply(test_data_trunc, function(df){
   out <- interpolate(df)
   out
   })
-
-test_data_10bin <- lapply(test_data_sec, function(df){
+#binning
+bin <- function(df,bin){
   
   data_num <- df %>%
     select(where(is.numeric))
   
   out <- data_num %>%
-    mutate(across(1,\(x) round(x / 10) * 10)) %>% 
+    mutate(across(1,\(x) round(x / bin) * bin)) %>% 
     group_by(1) %>%
     summarise(across(everything(),mean, na.rm = TRUE) )
   out
-})
+}
 
-test_data_5bin <- lapply(test_data_sec, function(df){
-  
-  data_num <- df %>%
-    select(where(is.numeric))
-  
-  out <- data_num %>%
-    mutate(across(1,\(x) round(x / 5) * 5)) %>% 
-    group_by(1) %>%
-    summarise(across(everything(),mean, na.rm = TRUE) )
-  out
-})
+test_data_10bin <- lapply(test_data_sec, \(df) bin(df,10) )
 
-test_data_15bin <- lapply(test_data_sec, function(df){
-  
-  data_num <- df %>%
-    select(where(is.numeric))
-  
-  out <- data_num %>%
-    mutate(across(1,\(x) round(x / 15) * 15)) %>% 
-    group_by(1) %>%
-    summarise(across(everything(),mean, na.rm = TRUE) )
-  out
-})
+test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
+
+test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
 
 ####################### Calculation of VT1, VT2 ################################
 
@@ -340,17 +321,17 @@ cps_input <- function(test_data){
   VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
   VT1_TIME <- df$TIME_S[VT1_I]
   VT2_TIME <- df$TIME_S[VT2_I]
-  VT1_VO2ABS <- df$VO2_ABS[VT1_I]
-  VT2_VO2ABS <- df$VO2_ABS[VT2_I]
-  VT1_VO2REL <- df$VO2_REL[VT1_I]
-  VT2_VO2REL <- df$VO2_REL[VT2_I]
+  VT1_VO2ABS <- df$VO2_ABS_LOW[VT1_I]
+  VT2_VO2ABS <- df$VO2_ABS_LOW[VT2_I]
+  VT1_VO2REL <- df$VO2_REL_LOW[VT1_I]
+  VT2_VO2REL <- df$VO2_RELLOW[VT2_I]
   VT1_WORK <- round(df$WORK[VT1_I]/25)*25
   VT2_WORK <- round(df$WORK[VT2_I]/25)*25
   VT1_HR <- df$HR[VT1_I]
   VT2_HR <- df$HR[VT2_I]
   
-  VT1_VO2PERC <- df$VO2_ABS[VT1_I]
-  VT2_VO2PERC <- df$VO2_ABS[VT2_I]
+  VT1_VO2PERC <- df$VO2_ABS_LOW[VT1_I]
+  VT2_VO2PERC <- df$VO2_ABS_LOW[VT2_I]
   VT1_WORKPERC <- VT1_WORK
   VT2_WORKPERC <- VT2_WORK
   VT1_HRPERC <- df$HR[VT1_I]
@@ -365,10 +346,11 @@ cps_input <- function(test_data){
     })
 }
 
-cps_5bin <- cps_input(test_data_5bin)
+
 cps_10bin <- cps_input(test_data_10bin)
-cps_15bin <- cps_input(test_data_15bin)
-cps_sec <- cps_input(test_data_sec)
+#cps_5bin <- cps_input(test_data_5bin)
+#cps_15bin <- cps_input(test_data_15bin)
+#cps_sec <- cps_input(test_data_sec)
 ####################### Changepoints plotting ##################################
 
 #plotting function
@@ -461,27 +443,28 @@ plist_cps_func <- function(test_data,cps_data){
   return(plist)
 }
 
-#create plots
-plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
-plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
-plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
-plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
-
-#marrange grobs, spread grobs over pages.
-plots_cps_5bin <- marrangeGrob(plist_cps_5bin, nrow=1,ncol=1)
-plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
-plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
-plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
-
-#export plots
-ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
-       height = 8.5, units = "in")
-ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
-       height = 8.5, units = "in")
-ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
-       height = 8.5, units = "in")
-ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
-       height = 8.5, units = "in")
+# 
+# #create plots
+# plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
+# plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
+# plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
+# plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
+# 
+# #marrange grobs, spread grobs over pages.
+# plots_cps_5bin <- marrangeGrob(plist_cps_5bin, nrow=1,ncol=1)
+# plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
+# plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
+# plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
+# 
+# #export plots
+# ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
+#        height = 8.5, units = "in")
+# ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
+#        height = 8.5, units = "in")
+# ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
+#        height = 8.5, units = "in")
+# ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
+#        height = 8.5, units = "in")
 
 ################################# Test Details #################################
 
