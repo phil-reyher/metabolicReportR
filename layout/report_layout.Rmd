@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
 \begin{tabularx}{\textwidth}{r l}
 \textbf{Athlete Name:} & `r dem$NAME`\\
 \textbf{Age:} & `r dem$AGE`\\
+\textbf{Body Mass:} & `r round(as.numeric(dem$MASS,digits=1))` kg\\
 \textbf{Sport:} & \\
 \end{tabularx}
 \endgroup
@@ -38,7 +39,6 @@ knitr::opts_chunk$set(
 \fancysection{Test Details}
 ```{r}
 details %>% 
-    mutate(across(2:4,~round(as.numeric(.),1) )) %>% 
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
     kbl( booktabs = T, escape = FALSE,align = "c",
@@ -54,15 +54,15 @@ details %>%
 
 \fancysection{Summary Data}
 ```{r}
-summa %>% select(VARIABLE,VO2ABS:HRPERC) %>% 
-  mutate(across(where(is.numeric),~round(.,1))) %>% 
+summa %>%
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   kbl( booktabs = T, escape = FALSE,align = "c",
-       col.names= c("Variable","VO\\textsubscript{2} \\par (L/min)",
+       col.names= c("Variable","Power \\par (W)","Power \\par (\\%)",
+                    "VO\\textsubscript{2} \\par (L/min)",
                     "VO\\textsubscript{2} \\par (mL/kg/min)",
-                   "Power \\par (W)","Heart Rate \\par (beats/min)",
-                   "VO\\textsubscript{2} \\par (\\%)","Power \\par (\\%)",
+                    "VO\\textsubscript{2} \\par (\\%)",
+                   "Heart Rate \\par (beats/min)",
                    "Heart Rate \\par (\\%)" ) ) %>% 
   kable_styling(latex_options = c("HOLD_position")) %>% 
   row_spec(seq(1,nrow(summa),2), background="#fff3f3") %>% 
@@ -72,16 +72,15 @@ summa %>% select(VARIABLE,VO2ABS:HRPERC) %>%
 \fancysection{GXT Data}
 ```{r}
 gxt %>%
-    mutate(across(where(is.numeric),~round(.,1))) %>% 
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
        col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (mL/kg/min)",
-                     "Heart Rate \\par (beats/min)","VO\\textsubscript{2max} \\par (\\%)",
-                 "HR\\textsubscript{max} \\par (\\%)") ) %>% 
+                    "VO\\textsubscript{2max} \\par (\\%)",
+                    "Heart Rate \\par (beats/min)",
+                    "HR\\textsubscript{max} \\par (\\%)") ) %>% 
   column_spec(1:5, width = "\\\\dimexpr\\\\textwidth/5\\\\relax") %>% 
   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
-  row_spec(which(gxt$WORK %in% summa$WORK[2:3]),bold = T,background = "#ee3124",color="white") %>% 
     kable_styling(latex_options=c("HOLD_position")) %>% 
   footnote(number = "Stages at which VT1 and VT2 occured are marked in red.")
 
