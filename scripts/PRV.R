@@ -292,6 +292,14 @@ findchangepts_std <- function(x) {
   return(change_point)
 }
 
+predict_work <- function(df,VO2_VAL){
+  df <- df %>% slice(1:which.max(df$WORK))
+  model <- lm(WORK ~ VO2_ABS_LOW,data = df)
+  new_observations <- data.frame(VO2_ABS_LOW=VO2_VAL)
+  predicted_vals <- predict(model,newdata = new_observations)
+  return(predicted_vals)
+}
+
 cps_input <- function(test_data){
   lapply(test_data, function(df){
   ##truncate dataframe to ranges in which VT1/VT2 can occur (NASA Paper,2021)
@@ -325,8 +333,10 @@ cps_input <- function(test_data){
   VT2_VO2ABS <- df$VO2_ABS_LOW[VT2_I]
   VT1_VO2REL <- df$VO2_REL_LOW[VT1_I]
   VT2_VO2REL <- df$VO2_REL_LOW[VT2_I]
-  VT1_WORK <- round(df$WORK[VT1_I]/25)*25
-  VT2_WORK <- round(df$WORK[VT2_I]/25)*25
+
+  VT1_WORK <- predict_work(df,VT1_VO2ABS)
+  VT2_WORK <- predict_work(df,VT2_VO2ABS)
+  
   VT1_HR <- df$HR[VT1_I]
   VT2_HR <- df$HR[VT2_I]
   
@@ -471,7 +481,8 @@ plist_cps_func <- function(test_data,cps_data){
 details_tbl <- lapply(demo_data,function(dem){
   
   out <- dem %>% select(TEST_DAT,TEMP,RH,PB) %>%
-    mutate(across(TEST_DAT,~format(.x, format = "%d-%b-%Y")))
+    mutate(across(TEST_DAT,~format(.x, format = "%d-%b-%Y"))) %>% 
+    mutate(across(2:4,~format(round(as.numeric(.),1), nsmall=1))) 
   out
   })
 
@@ -485,16 +496,16 @@ max_tbl <- lapply(test_data, function(df){
   MAX_TIME <- df$TIME_S[MAX_I]
   MAX_VO2ABS <- max(df$VO2_ABS_LOW)
   MAX_VO2REL <- max(df$VO2_REL_LOW)
-  MAX_WORK <- round(max(df$WORK)/25)*25
+  MAX_WORK <- predict_work(df,MAX_VO2ABS)
   MAX_HR <- max(df$HR)
   
   MAX_VO2PERC <- 1
   MAX_WORKPERC <- 1
   MAX_HRPERC <- 1
   
-  df <- data.frame(MAX_I,MAX_TIME,MAX_VO2ABS,MAX_VO2REL,MAX_WORK,MAX_HR,
+  out <- data.frame(MAX_I,MAX_TIME,MAX_VO2ABS,MAX_VO2REL,MAX_WORK,MAX_HR,
                    MAX_VO2PERC,MAX_WORKPERC,MAX_HRPERC)
-  df
+  out
   
 })
 
@@ -518,14 +529,22 @@ summary_tbl <- mapply(cp=cps_10bin,max=max_tbl,SIMPLIFY = F,
   pivot_wider(id_cols =VARIABLE, names_from = measurement, values_from = value,
               names_repair = "check_unique")
   
-  cp <- cp %>% mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
-  
-  cp
+  out <- cp[order(cp$VO2ABS),]
+  out
 })
 
+summary_formatted_tbl <- lapply(summary_tbl, function(df){
+  df <- df %>% mutate(across(ends_with("PERC",ignore.case =T),
+                             ~round(.*100,digits = 0) ) ) %>%
+    mutate(across(c("WORK","HR"),~round(.,digits = 0) )) %>% 
+    mutate(across(c("VO2ABS","VO2REL"),~format(round(.,digits = 1),nsmall = 1)))
+  out <- df %>% select(VARIABLE,WORK,WORKPERC,VO2ABS,VO2REL,VO2PERC,HR,HRPERC)
+  
+  out
+})
 #################################### GXT Table #################################
 
-test_data_10bin <- lapply(test_data_10bin, function(df){
+test_data_trunc<- lapply(test_data_trunc, function(df){
   
   df$VO2MAX_PERC <- df$VO2_REL_LOW/max(df$VO2_REL_LOW)
   df$HRMAX_PERC <- df$HR/max(df$HR)
@@ -533,16 +552,41 @@ test_data_10bin <- lapply(test_data_10bin, function(df){
 })
 
 
-gxt_tbl <- lapply(test_data_10bin, function(df){
+gxt_tbl <- lapply(test_data_trunc, function(df){
+  df <- df %>% slice(1:which.max(df$WORK))
+  WORK <- df$WORK
+  df <- select(df,VO2_REL_LOW,VO2MAX_PERC,HR,HRMAX_PERC)
+  results_list <- lapply(df, function(vec){
+    model <- lm(vec ~ WORK)
+    WORK_IN <- seq(100,max(WORK),by=25)
+    new_observations <- data.frame(WORK =  WORK_IN)
+    predicted_vals <- predict(model,newdata = new_observations)
+    })
   
-  out <- df %>% select(WORK,VO2_REL,HR,VO2MAX_PERC,HRMAX_PERC) %>%
-    mutate(across(WORK,\(x) round(x/25)*25)) %>% 
-    group_by(WORK) %>% 
-    summarise(across(everything(),mean) ) %>%
-    mutate(across(ends_with("PERC",ignore.case =T), ~round(.*100,digits = 0) ) )
-  
+  WORK = seq(100,max(WORK),by=25 )
+  out <- bind_cols(results_list)
+  out <- cbind(WORK,out)
+  out <- out %>% 
+    mutate(across(c("VO2MAX_PERC","HRMAX_PERC"), ~round(.*100,digits = 0)) ) %>% 
+    mutate(across(c("WORK","HR"),~round(.,digits = 0)) ) %>% 
+    mutate(across("VO2_REL_LOW",~format(round(.,digits = 1),nsmall = 1)) )
   out
 })
+
+#change last stage with max
+gxt_tbl <- mapply(gxt=gxt_tbl,max=max_tbl,SIMPLIFY = F,function(gxt,max){
+  gxt <- gxt[-nrow(gxt),]
+  max <- max %>% select('WORK'=MAX_WORK,'VO2_REL_LOW'=MAX_VO2REL,
+                         'VO2MAX_PERC'=MAX_VO2PERC,'HR'=MAX_HR,
+                         'HRMAX_PERC'=MAX_HRPERC) %>% 
+    mutate(across(c(3,5), ~round(.*100,digits = 0)) ) %>% 
+    mutate(across(c(1,4), ~round(.,digits = 0)) ) %>% 
+    mutate(across(2, ~format(round(.,digits = 1),nsmall = 1)) )
+  out <- rbind(gxt,max)
+  out
+})
+
+
 
 ########################### Coggan Power Zones #################################
 zone_tbl <- lapply(max_tbl, function(df){
@@ -654,3 +698,4 @@ biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
             x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
 
 scale_x_datetime(date_labels = "%R")
+
