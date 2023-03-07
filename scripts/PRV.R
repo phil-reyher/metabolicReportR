@@ -91,6 +91,7 @@ demo_data <- lapply(test_data, function(df) {
   AGE <- regex_s(df,"\\bage\\b")
   SEX <- regex_s(df,"\\bsex\\b")
   MASS <- regex_s(df,"\\bweight\\b",unit="kg")
+  DEVICE <- regex_s(df,"^(?=.*(exercise))(?=.*(device)).*$")
   PB <- regex_s(df,"^(?=.*(baro))(?=.*(press)).*$")
   TEMP <- regex_s(df,"^(?=.*(insp))(?=.*(temp)).*$")
   RH <- regex_s(df,"^(?=.*(insp))(?=.*(humid)).*$")
@@ -101,7 +102,8 @@ demo_data <- lapply(test_data, function(df) {
   EV_CD <- regex_s(df,"^(?=.*(cool))(?=.*(down)).*$",1)
   ifelse(length(EV_CD)==0,EV_CD <- NA,EV_CD)
   
-  df1 <- data.frame(NAME, AGE, SEX, MASS, PB, TEMP, RH, EV_WU, EV_EX, EV_CD)
+  df1 <- data.frame(NAME, AGE, SEX, MASS, DEVICE, PB, TEMP, RH, EV_WU, EV_EX,
+                    EV_CD)
   df1 <- df1 %>% select(where(~any(!is.na(.))))
   })
   
@@ -456,7 +458,7 @@ plist_cps_func <- function(test_data,cps_data){
 # 
 # #create plots
 # plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
-# plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
+ plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
 # plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
 # plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
 # 
@@ -555,7 +557,7 @@ test_data_trunc<- lapply(test_data_trunc, function(df){
 gxt_tbl <- lapply(test_data_trunc, function(df){
   df <- df %>% slice(1:which.max(df$WORK))
   WORK <- df$WORK
-  df <- select(df,VO2_REL_LOW,VO2MAX_PERC,HR,HRMAX_PERC)
+  df <- select(df,VO2_ABS_LOW,VO2_REL_LOW,VO2MAX_PERC,HR,HRMAX_PERC)
   results_list <- lapply(df, function(vec){
     model <- lm(vec ~ WORK)
     WORK_IN <- seq(100,max(WORK),by=25)
@@ -567,21 +569,23 @@ gxt_tbl <- lapply(test_data_trunc, function(df){
   out <- bind_cols(results_list)
   out <- cbind(WORK,out)
   out <- out %>% 
-    mutate(across(c("VO2MAX_PERC","HRMAX_PERC"), ~round(.*100,digits = 0)) ) %>% 
+    mutate(across(c("VO2MAX_PERC","HRMAX_PERC"), ~round(.*100,digits = 0))) %>% 
     mutate(across(c("WORK","HR"),~round(.,digits = 0)) ) %>% 
-    mutate(across("VO2_REL_LOW",~format(round(.,digits = 1),nsmall = 1)) )
+    mutate(across(c("VO2_ABS_LOW","VO2_REL_LOW"),~format(round(.,digits = 1),
+                                                         nsmall = 1)) )
   out
 })
 
 #change last stage with max
 gxt_tbl <- mapply(gxt=gxt_tbl,max=max_tbl,SIMPLIFY = F,function(gxt,max){
   gxt <- gxt[-nrow(gxt),]
-  max <- max %>% select('WORK'=MAX_WORK,'VO2_REL_LOW'=MAX_VO2REL,
-                         'VO2MAX_PERC'=MAX_VO2PERC,'HR'=MAX_HR,
-                         'HRMAX_PERC'=MAX_HRPERC) %>% 
-    mutate(across(c(3,5), ~round(.*100,digits = 0)) ) %>% 
-    mutate(across(c(1,4), ~round(.,digits = 0)) ) %>% 
-    mutate(across(2, ~format(round(.,digits = 1),nsmall = 1)) )
+  max <- max %>% select('WORK'=MAX_WORK,'VO2_ABS_LOW'=MAX_VO2ABS,
+                        'VO2_REL_LOW'=MAX_VO2REL,'VO2MAX_PERC'=MAX_VO2PERC,
+                        'HR'=MAX_HR,'HRMAX_PERC'=MAX_HRPERC) %>% 
+    mutate(across(c("VO2MAX_PERC","HRMAX_PERC"), ~round(.*100,digits = 0))) %>% 
+    mutate(across(c("WORK","HR"),~round(.,digits = 0)) ) %>% 
+    mutate(across(c("VO2_ABS_LOW","VO2_REL_LOW"),~format(round(.,digits = 1)
+                                                         ,nsmall = 1)) )
   out <- rbind(gxt,max)
   out
 })
