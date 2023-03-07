@@ -30,7 +30,7 @@ knitr::opts_chunk$set(
 \textbf{Athlete Name:} & `r dem$NAME`\\
 \textbf{Age:} & `r dem$AGE`\\
 \textbf{Body Mass:} & `r round(as.numeric(dem$MASS,digits=1))` kg\\
-\textbf{Sport:} & \\
+\textbf{Exercise Device:} & `r dem$DEVICE`\\
 \end{tabularx}
 \endgroup
 
@@ -61,13 +61,12 @@ summa %>%
        col.names= c("Variable","Power \\par (W)","Power \\par (\\%)",
                     "VO\\textsubscript{2} \\par (L/min)",
                     "VO\\textsubscript{2} \\par (mL/kg/min)",
-                    "VO\\textsubscript{2} \\par (\\%)",
+                    "VO\\textsubscript{2max} \\par (\\%)",
                    "Heart Rate \\par (beats/min)",
-                   "Heart Rate \\par (\\%)" ) ) %>% 
+                   "HR\\textsubscript{max} \\par (\\%)" ) ) %>% 
   kable_styling(latex_options = c("HOLD_position")) %>% 
   row_spec(seq(1,nrow(summa),2), background="#fff3f3") %>% 
-  column_spec(2:8,width = "\\\\dimexpr0.95\\\\textwidth/8\\\\relax") %>% 
-  column_spec(1,width = "\\\\dimexpr1.35\\\\textwidth/8\\\\relax")
+  column_spec(1:8,width = "\\\\dimexpr\\\\textwidth/8\\\\relax")
 ```
 \fancysection{GXT Data}
 ```{r}
@@ -75,14 +74,15 @@ gxt %>%
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
-       col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (mL/kg/min)",
+       col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (L/min)",
+                     "VO\\textsubscript{2} \\par (mL/kg/min)",
                     "VO\\textsubscript{2max} \\par (\\%)",
                     "Heart Rate \\par (beats/min)",
                     "HR\\textsubscript{max} \\par (\\%)") ) %>% 
-  column_spec(1:5, width = "\\\\dimexpr\\\\textwidth/5\\\\relax") %>% 
+  column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
     kable_styling(latex_options=c("HOLD_position")) %>% 
-  footnote(number = "Stages at which VT1 and VT2 occured are marked in red.")
+  footnote(number = "Power at the last stage is an approximation relative to the Vo2 achieved.")
 
 
 ```
@@ -99,6 +99,10 @@ zone %>%
   kable_styling(latex_options=c("HOLD_position")) %>% 
   column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
   row_spec(seq(1,nrow(zone),2), background="#fff3f3")
+```
+\fancysection{Plots}
+```{r}
+grid.draw(plot)
 ```
 
 
