@@ -425,12 +425,12 @@ plist_cps_func <- function(test_data,cps_data){
            scale_color_manual(name=' ',
                           breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
               values=c('VE/VO2'='blue', 'VE/VCO2'='red', 'Work'='lightblue'),
-              guides(colour = guide_legend(override.aes = list(size = 10) ) ) )+
+              guides(colour = guide_legend(override.aes = list(size = 8) ) ) )+
           theme_bw()+
            guides(shape = guide_legend(override.aes = list(size = 1)))+
            guides(color = guide_legend(override.aes = list(size = 1)))+
            theme(legend.title = element_blank(),
-                 legend.text = element_text(size = 10),
+                 legend.text = element_text(size = 8),
                  legend.position = c(.05, .95),
                  legend.justification = c("left", "top"),
                  legend.box.just = "right",
@@ -446,11 +446,8 @@ plist_cps_func <- function(test_data,cps_data){
                       c(5,5,5,5),
                       c(5,5,5,5),
                       c(5,5,5,5))
-         
-         out <- grid.arrange(grobs = plots, layout_matrix = lay)
-         
-         out
-         
+
+         out <- arrangeGrob(grobs = plots, layout_matrix = lay)
        })
   return(plist)
 }
@@ -458,7 +455,7 @@ plist_cps_func <- function(test_data,cps_data){
 # 
 # #create plots
 # plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
- plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
+plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
 # plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
 # plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
 # 
@@ -593,39 +590,77 @@ gxt_tbl <- mapply(gxt=gxt_tbl,max=max_tbl,SIMPLIFY = F,function(gxt,max){
 
 
 ########################### Coggan Power Zones #################################
-zone_tbl <- lapply(max_tbl, function(df){
+coggan_tbl <- lapply(cps_10bin, function(df){
   
-  lvl1_work <- round(df$MAX_WORK*0.55)
-  lvl1_hr <- round(df$MAX_HR*0.68)
+  lvl1_work_low <- "-"
+  lvl1_work_up <- round(df$VT2_WORK*0.55)
+  lvl1_hr_low <- "-"
+  lvl1_hr_up <- round(df$VT2_HR*0.68)
+  lvl1_rpe_low <- "-"
+  lvl1_rpe_up <- 2
   
-  lvl2_work_low <- round(df$MAX_WORK*0.56)
-  lvl2_work_up <- round(df$MAX_WORK*0.75)
-  lvl2_hr_low <- round(df$MAX_HR*0.69)
-  lvl2_hr_up <- round(df$MAX_HR*0.83)
+  lvl2_work_low <- round(df$VT2_WORK*0.56)
+  lvl2_work_up <- round(df$VT2_WORK*0.75)
+  lvl2_hr_low <- round(df$VT2_HR*0.69)
+  lvl2_hr_up <- round(df$VT2_HR*0.83)
+  lvl2_rpe_low <- 2
+  lvl2_rpe_up <- 3
   
-  lvl3_work_low <- round(df$MAX_WORK*0.76)
-  lvl3_work_up <- round(df$MAX_WORK*0.90)
-  lvl3_hr_low <- round(df$MAX_HR*0.84)
-  lvl3_hr_up <- round(df$MAX_HR*0.94)
+  lvl3_work_low <- round(df$VT2_WORK*0.76)
+  lvl3_work_up <- round(df$VT2_WORK*0.90)
+  lvl3_hr_low <- round(df$VT2_HR*0.84)
+  lvl3_hr_up <- round(df$VT2_HR*0.94)
+  lvl3_rpe_low <- 3
+  lvl3_rpe_up <- 4
   
-  lvl4_work_low <- round(df$MAX_WORK*0.91)
-  lvl4_work_up <- round(df$MAX_WORK*1.05)
-  lvl4_hr_low <- round(df$MAX_HR*0.95)
-  lvl4_hr_up <- round(df$MAX_HR*1.05)
+  lvl4_work_low <- round(df$VT2_WORK*0.91)
+  lvl4_work_up <- round(df$VT2_WORK*1.05)
+  lvl4_hr_low <- round(df$VT2_HR*0.95)
+  lvl4_hr_up <- round(df$VT2_HR*1.05)
+  lvl4_rpe_low <- 4
+  lvl4_rpe_up <- 5
   
-  lvl5_work_low <- round(df$MAX_WORK*1.06)
-  lvl5_work_up <- round(df$MAX_WORK*1.2)
-  lvl5_hr <- round(df$MAX_HR*1.06)
+  lvl5_work_low <- round(df$VT2_WORK*1.06)
+  lvl5_work_up <- round(df$VT2_WORK*1.2)
+  lvl5_hr_low <- round(df$VT2_HR*1.06)
+  lvl5_hr_up <- "-"
+  lvl5_rpe_low <- 6
+  lvl5_rpe_up <- 7
+  
+  lvl6_work_low <- round(df$VT2_WORK*1.21)
+  lvl6_work_up <- "-"
+  lvl6_hr_low <- "-"
+  lvl6_hr_up <- "-"
+  lvl6_rpe_low <- 7
+  lvl6_rpe_up <- "-"
+  
+  lvl7_work_low <- "-"
+  lvl7_work_up <- "-"
+  lvl7_hr_low <- "-"
+  lvl7_hr_up <- "-"
+  lvl7_rpe_low <- 10
+  lvl7_rpe_up <- "-"
 
   
-  lvl1 <- c(1,"Active Recovery","",lvl1_work,"",lvl1_hr)
-  lvl2 <- c(2,"Endurance",lvl2_work_low,lvl2_work_up,lvl2_hr_low,lvl2_hr_up)
-  lvl3 <- c(3,"Tempo",lvl3_work_low,lvl3_work_up, lvl3_hr_low,lvl3_hr_up )
-  lvl4 <- c(4,"Lactate Threshold",lvl4_work_low,lvl4_work_up, lvl4_hr_low,lvl4_hr_up )
-  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up," ",lvl5_hr)
-  tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5))
-  colnames(tr_zones) <- c("Zone","Intensity","Lower Range","Upper Range",
-                          "Lower Range","Upper Range")
+  lvl1 <- c(1,"Active Recovery",lvl1_work_low,lvl1_work_up,lvl1_hr_low,
+            lvl1_hr_up,lvl1_rpe_low,lvl1_rpe_up)
+  lvl2 <- c(2,"Endurance",lvl2_work_low,lvl2_work_up,lvl2_hr_low,lvl2_hr_up,
+            lvl2_rpe_low,lvl2_rpe_up)
+  lvl3 <- c(3,"Tempo",lvl3_work_low,lvl3_work_up,lvl3_hr_low,lvl3_hr_up,
+            lvl3_rpe_low,lvl3_rpe_up)
+  lvl4 <- c(4,"Lactate Threshold",lvl4_work_low,lvl4_work_up,lvl4_hr_low,
+            lvl4_hr_up,lvl4_rpe_low,lvl4_rpe_up)
+  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up,lvl5_hr_low,lvl5_hr_up,
+            lvl5_rpe_low,lvl5_rpe_up)
+  lvl6 <- c(6,"Anaerobic Capacity",lvl6_work_low,lvl6_work_up,lvl6_hr_low,
+            lvl6_hr_up,lvl6_rpe_low,lvl6_rpe_up)
+  lvl7 <- c(7,"Neuromuscular Power",lvl7_work_low,lvl7_work_up,lvl7_hr_low,
+            lvl7_hr_up,lvl7_rpe_low,lvl7_rpe_up)
+  tr_zones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5,lvl6,lvl7))
+  colnames(tr_zones) <- c("Zone","Intensity","Lower \\par Range",
+                          "Upper \\par Range","Lower \\par Range",
+                          "Upper \\par Range","Lower \\par Range",
+                          "Upper \\par Range")
   rownames(tr_zones) <- NULL
   out <- tr_zones
   out
