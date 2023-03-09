@@ -20,11 +20,10 @@ knitr::opts_chunk$set(
 )
 
 ```
-
 \begin{center}
 \textbf{\large \textbf{La Trobe Performance Hub} }
+\vspace{2ex   }
 \end{center}
-\fancysection{}
 \begingroup
 \setlength{\tabcolsep}{0.5em}
 \begin{tabularx}{\textwidth}{r l}
@@ -34,7 +33,8 @@ knitr::opts_chunk$set(
 \textbf{Exercise Device:} & `r dem$DEVICE`\\
 \end{tabularx}
 \endgroup
-\vspace{2ex}
+\vspace{4ex}
+
 \fancysection{Test Details}
 ```{r}
 details %>% 
@@ -76,7 +76,7 @@ gxt %>%
   column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
     kable_styling(latex_options=c("HOLD_position")) %>% 
-  footnote(number = "Power at the last stage is an approximation relative to the VO2 achieved.")
+  footnote(number = "Power at the last stage is an approximation relative to the VO\\\\textsubscript{2} achieved.",escape = F)
 ```
 \newpage
 \fancysection{Training Zones - Modified Allen \& Coggan}
@@ -87,7 +87,10 @@ coggan %>%
   tidytable::mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   `colnames<-`(coln) %>% 
   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "") %>% 
-  add_header_above(c(" "=2, "Power Zones" = 2, "Heart Rate Zones" = 2,"RPE" = 2)) %>%
+  add_header_above(c(" "=2, "(W)" = 2, "(beats/min)" = 2,"(Borg 6-20)" = 2),escape = F,
+  align="c") %>%
+  add_header_above(c(" "=2, "Power Zones" = 2, "Heart Rate Zones" = 2,"RPE" = 2),
+                   line = F) %>%
   kable_styling(latex_options=c("HOLD_position")) %>% 
   column_spec(1, width = "\\\\dimexpr7\\\\textwidth/100\\\\relax") %>% 
   column_spec(2, width = "\\\\dimexpr24\\\\textwidth/100\\\\relax") %>% 
@@ -95,11 +98,29 @@ coggan %>%
   row_spec(seq(1,nrow(coggan),2), background="#fff3f3")
 ```
 \fancysection{Training Zones - AIS}
-
-
+```{r}
+coln <- colnames(ais)
+ais %>% 
+  tidytable::mutate(across(.cols = everything(),as.character)) %>% 
+  tidytable::mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
+  `colnames<-`(coln) %>% 
+  kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "") %>% 
+      add_header_above(c(" "=2, "(W)" = 2, "(beats/min)" = 2,"(Borg 6-20)" = 2),escape = F,
+      align="c") %>%
+  add_header_above(c(" "=2, "Power Zones" = 2, "Heart Rate Zones" = 2,"RPE" = 2),
+                   line = F) %>%
+  kable_styling(latex_options=c("HOLD_position")) %>% 
+  column_spec(1, width = "\\\\dimexpr7\\\\textwidth/100\\\\relax") %>% 
+  column_spec(2, width = "\\\\dimexpr24\\\\textwidth/100\\\\relax") %>% 
+  column_spec(3:8, width = "\\\\dimexpr11.5\\\\textwidth/100\\\\relax") %>% 
+  row_spec(seq(1,nrow(ais),2), background="#fff3f3")
+```
 \newpage
 \fancysection{Plots}
-```{r, out.width="100%", include=TRUE, fig.align="center", fig.cap=c("your caption"),fig.height=6}
-ggplotify::as.ggplot(plot)
+```{r, out.width="100%", include=TRUE, fig.align="center"}
+setwd("..")
+filepath <- file.path(getwd(),"plots","individual_plots",partname)
+file <- paste0(filepath,".pdf")
+  knitr::include_graphics(file, rel_path = F)  
 ```
 

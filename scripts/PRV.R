@@ -15,6 +15,7 @@
 #                                                                              #
 ################################################################################
 ################################### Packages ###################################
+library(purrr)
 library(data.table)
 library(tidytable)
 library(ggplot2)
@@ -459,6 +460,16 @@ plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
 # plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
 # plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
 # 
+# #save individual plots
+partnames_formatted <- gsub(",", "_", partnames)
+partnames_formatted <- gsub(" ", "", partnames_formatted)
+purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
+  ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
+         height = 8.5, units = "in")
+})
+
+partnames_formatted <- as.list(partnames_formatted)
+# 
 # #marrange grobs, spread grobs over pages.
 # plots_cps_5bin <- marrangeGrob(plist_cps_5bin, nrow=1,ncol=1)
 # plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
@@ -597,48 +608,47 @@ coggan_tbl <- lapply(cps_10bin, function(df){
   lvl1_hr_low <- "-"
   lvl1_hr_up <- round(df$VT2_HR*0.68)
   lvl1_rpe_low <- "-"
-  lvl1_rpe_up <- 2
+  lvl1_rpe_up <- 9
   
   lvl2_work_low <- round(df$VT2_WORK*0.56)
   lvl2_work_up <- round(df$VT2_WORK*0.75)
   lvl2_hr_low <- round(df$VT2_HR*0.69)
   lvl2_hr_up <- round(df$VT2_HR*0.83)
-  lvl2_rpe_low <- 2
-  lvl2_rpe_up <- 3
+  lvl2_rpe_low <- 9
+  lvl2_rpe_up <- 11
   
   lvl3_work_low <- round(df$VT2_WORK*0.76)
   lvl3_work_up <- round(df$VT2_WORK*0.90)
   lvl3_hr_low <- round(df$VT2_HR*0.84)
   lvl3_hr_up <- round(df$VT2_HR*0.94)
-  lvl3_rpe_low <- 3
-  lvl3_rpe_up <- 4
-  
+  lvl3_rpe_low <- 11
+  lvl3_rpe_up <- 13
   lvl4_work_low <- round(df$VT2_WORK*0.91)
   lvl4_work_up <- round(df$VT2_WORK*1.05)
   lvl4_hr_low <- round(df$VT2_HR*0.95)
   lvl4_hr_up <- round(df$VT2_HR*1.05)
-  lvl4_rpe_low <- 4
-  lvl4_rpe_up <- 5
+  lvl4_rpe_low <- 13
+  lvl4_rpe_up <- 15
   
   lvl5_work_low <- round(df$VT2_WORK*1.06)
   lvl5_work_up <- round(df$VT2_WORK*1.2)
   lvl5_hr_low <- round(df$VT2_HR*1.06)
   lvl5_hr_up <- "-"
-  lvl5_rpe_low <- 6
-  lvl5_rpe_up <- 7
+  lvl5_rpe_low <- 15
+  lvl5_rpe_up <- 17
   
   lvl6_work_low <- round(df$VT2_WORK*1.21)
   lvl6_work_up <- "-"
   lvl6_hr_low <- "-"
   lvl6_hr_up <- "-"
-  lvl6_rpe_low <- 7
-  lvl6_rpe_up <- "-"
+  lvl6_rpe_low <- 17
+  lvl6_rpe_up <- 19
   
   lvl7_work_low <- "-"
   lvl7_work_up <- "-"
   lvl7_hr_low <- "-"
   lvl7_hr_up <- "-"
-  lvl7_rpe_low <- 10
+  lvl7_rpe_low <- 20
   lvl7_rpe_up <- "-"
 
   
@@ -650,7 +660,7 @@ coggan_tbl <- lapply(cps_10bin, function(df){
             lvl3_rpe_low,lvl3_rpe_up)
   lvl4 <- c(4,"Lactate Threshold",lvl4_work_low,lvl4_work_up,lvl4_hr_low,
             lvl4_hr_up,lvl4_rpe_low,lvl4_rpe_up)
-  lvl5 <- c(5,"VO2 Max",lvl5_work_low,lvl5_work_up,lvl5_hr_low,lvl5_hr_up,
+  lvl5 <- c(5,"VO\\textsubscript{2max}",lvl5_work_low,lvl5_work_up,lvl5_hr_low,lvl5_hr_up,
             lvl5_rpe_low,lvl5_rpe_up)
   lvl6 <- c(6,"Anaerobic Capacity",lvl6_work_low,lvl6_work_up,lvl6_hr_low,
             lvl6_hr_up,lvl6_rpe_low,lvl6_rpe_up)
@@ -665,6 +675,74 @@ coggan_tbl <- lapply(cps_10bin, function(df){
   out <- tr_zones
   out
 })
+
+############################# AIS Power Zones ##################################
+ais_tbl <- lapply(max_tbl, function(df){
+  
+  lvl0_work_low <-round(df$MAX_WORK*0.4)
+  lvl0_work_up <- round(df$MAX_WORK*0.5)
+  lvl0_hr_low <- "-"
+  lvl0_hr_up <- round(df$MAX_HR*0.65)
+  lvl0_rpe_low <- "-"
+  lvl0_rpe_up <- 11
+  
+  lvl1_work_low <-round(df$MAX_WORK*0.5)
+  lvl1_work_up <- round(df$MAX_WORK*0.65)
+  lvl1_hr_low <- round(df$MAX_HR*0.65)
+  lvl1_hr_up <- round(df$MAX_HR*0.75)
+  lvl1_rpe_low <- 12
+  lvl1_rpe_up <- 13
+  
+  lvl2_work_low <- round(df$MAX_WORK*0.65)
+  lvl2_work_up <- round(df$MAX_WORK*0.725)
+  lvl2_hr_low <- round(df$MAX_HR*0.75)
+  lvl2_hr_up <- round(df$MAX_HR*0.8)
+  lvl2_rpe_low <- 13
+  lvl2_rpe_up <- 15
+  
+  lvl3_work_low <- round(df$MAX_WORK*0.725)
+  lvl3_work_up <- round(df$MAX_WORK*0.80)
+  lvl3_hr_low <- round(df$MAX_HR*0.8)
+  lvl3_hr_up <- round(df$MAX_HR*0.85)
+  lvl3_rpe_low <- 15
+  lvl3_rpe_up <- 16
+  
+  lvl4_work_low <- round(df$MAX_WORK*0.8)
+  lvl4_work_up <- round(df$MAX_WORK*0.9)
+  lvl4_hr_low <- round(df$MAX_HR*0.85)
+  lvl4_hr_up <- round(df$MAX_HR*0.92)
+  lvl4_rpe_low <- 16
+  lvl4_rpe_up <- 17
+  
+  lvl5_work_low <- round(df$MAX_WORK*0.9)
+  lvl5_work_up <- round(df$MAX_WORK*1)
+  lvl5_hr_low <- round(df$MAX_HR*0.92)
+  lvl5_hr_up <- round(df$MAX_HR*1)
+  lvl5_rpe_low <- 17
+  lvl5_rpe_up <- 19
+  
+  lvl0 <- c(0,"Recovery",lvl0_work_low,lvl0_work_up,lvl0_hr_low,
+            lvl0_hr_up,lvl0_rpe_low,lvl0_rpe_up)
+  lvl1 <- c(1,"Aerobic",lvl1_work_low,lvl1_work_up,lvl1_hr_low,
+            lvl1_hr_up,lvl1_rpe_low,lvl1_rpe_up)
+  lvl2 <- c(2,"Extensive Endurance",lvl2_work_low,lvl2_work_up,lvl2_hr_low,lvl2_hr_up,
+            lvl2_rpe_low,lvl2_rpe_up)
+  lvl3 <- c(3,"Intensive Endurance",lvl3_work_low,lvl3_work_up,lvl3_hr_low,lvl3_hr_up,
+            lvl3_rpe_low,lvl3_rpe_up)
+  lvl4 <- c(4,"Threshold",lvl4_work_low,lvl4_work_up,lvl4_hr_low,
+            lvl4_hr_up,lvl4_rpe_low,lvl4_rpe_up)
+  lvl5 <- c(5,"VO\\textsubscript{2max}",lvl5_work_low,lvl5_work_up,lvl5_hr_low,lvl5_hr_up,
+            lvl5_rpe_low,lvl5_rpe_up)
+  tr_zones <- as.data.frame(rbind(lvl0,lvl1,lvl2,lvl3,lvl4,lvl5))
+  colnames(tr_zones) <- c("Zone","Intensity","Lower \\par Range",
+                          "Upper \\par Range","Lower \\par Range",
+                          "Upper \\par Range","Lower \\par Range",
+                          "Upper \\par Range")
+  rownames(tr_zones) <- NULL
+  out <- tr_zones
+  out
+})
+
 
 ################################ Bland Altmann #################################
 binder <- function(list,method){
