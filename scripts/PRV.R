@@ -261,12 +261,7 @@ bin <- function(df,bin){
 
 test_data_10bin <- lapply(test_data_sec, \(df) bin(df,10) )
 
-test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
-
-test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
-
 ####################### Calculation of VT1, VT2 ################################
-
 findchangepts_std <- function(x) {
   m <- nrow(x)
   n <- ncol(x)
@@ -359,13 +354,9 @@ cps_input <- function(test_data){
     })
 }
 
-
 cps_10bin <- cps_input(test_data_10bin)
-cps_5bin <- cps_input(test_data_5bin)
-cps_15bin <- cps_input(test_data_15bin)
-cps_sec <- cps_input(test_data_sec)
-####################### Changepoints plotting ##################################
 
+####################### Changepoints plotting ##################################
 #plotting function
 plist_cps_func <- function(test_data,cps_data){
   plist <- mapply(df=test_data, vt=cps_data, SIMPLIFY = F,
@@ -452,14 +443,8 @@ plist_cps_func <- function(test_data,cps_data){
        })
   return(plist)
 }
-
-# 
 # #create plots
-# plist_cps_5bin <- plist_cps_func(test_data_5bin,cps_5bin)
 plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
-# plist_cps_15bin <- plist_cps_func(test_data_15bin,cps_15bin)
-# plist_cps_sec <- plist_cps_func(test_data_sec,cps_sec)
-# 
 # #save individual plots
 partnames_formatted <- gsub(",", "_", partnames)
 partnames_formatted <- gsub(" ", "", partnames_formatted)
@@ -467,27 +452,9 @@ purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
   ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
          height = 8.5, units = "in")
 })
-
 partnames_formatted <- as.list(partnames_formatted)
-# 
-# #marrange grobs, spread grobs over pages.
-# plots_cps_5bin <- marrangeGrob(plist_cps_5bin, nrow=1,ncol=1)
-# plots_cps_10bin <- marrangeGrob(plist_cps_10bin, nrow=1,ncol=1)
-# plots_cps_15bin <- marrangeGrob(plist_cps_15bin, nrow=1,ncol=1)
-# plots_cps_sec <- marrangeGrob(plist_cps_sec, nrow=1,ncol=1)
-# 
-# #export plots
-# ggsave("plots/5bin_cps.pdf", plots_cps_5bin, width = 11,
-#        height = 8.5, units = "in")
-# ggsave("plots/10bin_cps.pdf", plots_cps_10bin, width = 11,
-#        height = 8.5, units = "in")
-# ggsave("plots/15bin_cps.pdf", plots_cps_15bin, width = 11,
-#        height = 8.5, units = "in")
-# ggsave("plots/sec_cps.pdf", plots_cps_sec, width = 11,
-#        height = 8.5, units = "in")
 
 ################################# Test Details #################################
-
 details_tbl <- lapply(demo_data,function(dem){
   
   out <- dem %>% select(TEST_DAT,TEMP,RH,PB) %>%
@@ -496,10 +463,7 @@ details_tbl <- lapply(demo_data,function(dem){
   out
   })
 
-
-
 ############################# Table summary ####################################
-
 max_tbl <- lapply(test_data, function(df){
   
   MAX_I <- which.max(df$VO2_ABS_LOW)
@@ -552,15 +516,15 @@ summary_formatted_tbl <- lapply(summary_tbl, function(df){
   
   out
 })
-#################################### GXT Table #################################
 
+#################################### GXT Table #################################
+#add perc, for later gxt_tbl, function
 test_data_trunc<- lapply(test_data_trunc, function(df){
   
   df$VO2MAX_PERC <- df$VO2_REL_LOW/max(df$VO2_REL_LOW)
   df$HRMAX_PERC <- df$HR/max(df$HR)
   df
 })
-
 
 gxt_tbl <- lapply(test_data_trunc, function(df){
   df <- df %>% slice(1:which.max(df$WORK))
@@ -597,8 +561,6 @@ gxt_tbl <- mapply(gxt=gxt_tbl,max=max_tbl,SIMPLIFY = F,function(gxt,max){
   out <- rbind(gxt,max)
   out
 })
-
-
 
 ########################### Coggan Power Zones #################################
 coggan_tbl <- lapply(cps_10bin, function(df){
@@ -744,11 +706,9 @@ ais_tbl <- lapply(max_tbl, function(df){
 })
 
 ############################## Exercise plots ##################################
-
 ex_plots <- mapply(df=test_data,dem=demo_data,vt=cps_10bin,SIMPLIFY = F,
                   FUN=function(df,dem,vt){
-
-p <-  ggplot(df,aes(x=TIME_S))+
+  p <-  ggplot(df,aes(x=TIME_S))+
   
   geom_vline(xintercept = vt$VT1_TIME)+
   annotate(x=vt$VT1_TIME,y=+Inf,
@@ -780,29 +740,6 @@ p <-  ggplot(df,aes(x=TIME_S))+
 ex_plotlist <- marrangeGrob(ex_plots, nrow=1,ncol=1)
 ggsave("multipage.pdf", ex_plotlist, width = 11, height = 8.5, units = "in")
 
-
 ################################################################################
 biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
             x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
-
-scale_x_datetime(date_labels = "%R")
-
-################################ Bland Altmann #################################
-binder <- function(list,method){
-  bind_rows(list) %>%
-    select(VT1_TIME,VT2_TIME) %>% 
-    add_column(ID= partnames,.before = "VT1")%>%
-    add_column(method= method,.before = "VT1")
-}
-df_sec <- binder(cps_sec,"sec")
-df_5bin <- binder(cps_5bin,"5bin")
-df_10bin <- binder(cps_10bin,"10bin")
-df_15bin <- binder(cps_15bin,"15bin")
-
-df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
-library(blandr)
-
-################################################################################
-plot(df$TIME_S,df$VO2_ABS_LOW,type = 'l')
-lines(bin$TIME_S,bin$VO2_ABS,type = 'l',col='red')
-lines(bin$TIME_S,bin$VO2_ABS_LOW, type= 'l', col='blue')
