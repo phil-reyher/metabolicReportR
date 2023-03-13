@@ -39,7 +39,7 @@ file_list <- list.files(path = fpath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
 ##read data
 ##apply over file-list
-test_data <- lapply(file.list, function(x){ 
+test_data <- lapply(file_list, function(x){ 
   df <- fread(x, header = F, fill = T, sep = ",", quote = "\"", dec = ".",
   na.strings = "")
   df
