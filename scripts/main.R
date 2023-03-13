@@ -34,8 +34,9 @@ source(here::here("scripts/functions/funs.R"))
 
 #################################### Import ####################################
 ##get dir that script is in
-file_list <- list.files(path = "data/single", pattern = "*.csv", ignore.case = T,
-    full.names = T)
+fpath <- file.path("data","single")
+file_list <- list.files(path = fpath, pattern = "*.csv",
+                        ignore.case = T, full.names = T)
 ##read data
 ##apply over file-list
 test_data <- lapply(file.list, function(x){ 
