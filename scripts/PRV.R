@@ -25,11 +25,8 @@ library(grid)
 library(here)
 #################################### Import ####################################
 ##get dir that script is in
-dir <- dirname(rstudioapi::getSourceEditorContext()$path)
-
+dir <- dirname(here::here())
 setwd(dir)
-##go up a folder (now Parvo folder is the wd)
-setwd("..")
 file.list = list.files(path = "data/single", pattern = "*.csv", ignore.case = T,
     full.names = T)
 
