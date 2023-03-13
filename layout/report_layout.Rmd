@@ -3,15 +3,15 @@ output:
   pdf_document:
     keep_tex: true
     includes:
-      in_header: additional_latex_styling.tex
+      in_header: "latex_input/additional_latex_styling.tex"
 ---
 ```{r setup, include=FALSE}
 load(file = ".RData") 
 library(kableExtra)
 library(tidytable)
 library(gridExtra)
+library(here)
 options(knitr.table.format = "latex")
-
 knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
@@ -118,9 +118,9 @@ ais %>%
 \newpage
 \fancysection{Plots}
 ```{r, out.width="100%", include=TRUE, fig.align="center"}
-setwd("..")
-filepath <- file.path(getwd(),"plots","individual_plots",partname)
-file <- paste0(filepath,".pdf")
-  knitr::include_graphics(file, rel_path = F)  
+dir <- here::here("output","plots","threshold_plots")
+filepath <- file.path(dir, paste0(partname, ".pdf"))
+knitr::include_graphics(filepath, rel_path = F)
+filepath
 ```
 

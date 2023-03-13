@@ -36,3 +36,41 @@ regex_s <- function (df,x,y=0,unit="kg"){
   return(as.character(df[tmp_row,..tmp_col])
   )}
 
+######################### Matlabs Changepoints function ########################
+findchangepts_std <- function(x) {
+  m <- nrow(x)
+  n <- ncol(x)
+  max_log_likelihood <- -Inf
+  change_point <- 0
+  for (i in 3:(n-2)) {
+    log_likelihood <- 0
+    for (j in 1:m) {
+      region1 <- x[j, 1:(i-1)]
+      region2 <- x[j, i:n]
+      std1 <- sd(region1)
+      std2 <- sd(region2)
+      mean1 <- mean(region1)
+      mean2 <- mean(region2)
+      log_likelihood1 <- sum(dnorm(region1, mean = mean1, sd = std1,
+                                   log = TRUE))
+      log_likelihood2 <- sum(dnorm(region2, mean = mean2, sd = std2,
+                                   log = TRUE))
+      log_likelihood <- log_likelihood + log_likelihood1 + log_likelihood2
+    }
+    if (log_likelihood > max_log_likelihood) {
+      max_log_likelihood <- log_likelihood
+      change_point <- i
+    }
+  }
+  return(change_point)
+}
+
+
+########################### Predict work, linear model #########################
+predict_work <- function(df,VO2_VAL){
+  df <- df %>% slice(1:which.max(df$WORK))
+  model <- lm(WORK ~ VO2_ABS_LOW,data = df)
+  new_observations <- data.frame(VO2_ABS_LOW=VO2_VAL)
+  predicted_vals <- predict(model,newdata = new_observations)
+  return(predicted_vals)
+}
