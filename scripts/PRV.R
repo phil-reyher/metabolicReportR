@@ -261,9 +261,9 @@ bin <- function(df,bin){
 
 test_data_10bin <- lapply(test_data_sec, \(df) bin(df,10) )
 
-#test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
+test_data_5bin <- lapply(test_data_sec, \(df) bin(df,5) )
 
-#test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
+test_data_15bin <- lapply(test_data_sec, \(df) bin(df,15) )
 
 ####################### Calculation of VT1, VT2 ################################
 
@@ -361,9 +361,9 @@ cps_input <- function(test_data){
 
 
 cps_10bin <- cps_input(test_data_10bin)
-#cps_5bin <- cps_input(test_data_5bin)
-#cps_15bin <- cps_input(test_data_15bin)
-#cps_sec <- cps_input(test_data_sec)
+cps_5bin <- cps_input(test_data_5bin)
+cps_15bin <- cps_input(test_data_15bin)
+cps_sec <- cps_input(test_data_sec)
 ####################### Changepoints plotting ##################################
 
 #plotting function
