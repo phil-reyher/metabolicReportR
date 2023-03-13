@@ -14,6 +14,7 @@
 #                Metabolic Cart data                                           #
 #                                                                              #
 ################################################################################
+
 ################################### Packages ###################################
 library(purrr)
 library(data.table)
@@ -23,16 +24,18 @@ library(signal)
 library(gridExtra)
 library(grid)
 library(here)
+########################### Global Vars/Options  ###############################
+dir <- here::here()
+setwd(dir)
+threshold_plots_dir <- 
+
 ################################# Functions ####################################
 source(here::here("scripts/functions/funs.R"))
 
 #################################### Import ####################################
 ##get dir that script is in
-dir <- here::here()
-setwd(dir)
-file.list = list.files(path = "data/single", pattern = "*.csv", ignore.case = T,
+file_list <- list.files(path = "data/single", pattern = "*.csv", ignore.case = T,
     full.names = T)
-
 ##read data
 ##apply over file-list
 test_data <- lapply(file.list, function(x){ 
@@ -71,10 +74,10 @@ demo_data <- lapply(test_data, function(df) {
   df1 <- df1 %>% select(where(~any(!is.na(.))))
   })
 
-##function to extract the dates from file.list and append it to the demographics
+##function to extract the dates from file_list and append it to the demographics
 ##list
 ##apply over both lists
-demo_data <- mapply(df = demo_data, x = file.list, SIMPLIFY = F,
+demo_data <- mapply(df = demo_data, x = file_list, SIMPLIFY = F,
   FUN = function(df,x){
   dat <- regmatches(x, regexpr("\\d{8}", x))
   df$TEST_DAT <- as.Date(dat, format = "%Y%m%d")
@@ -111,9 +114,9 @@ test_data <- lapply(test_data, function(df) {
   l <- nrow(df)
   df <- slice(df,-(firstNA:l) )
   ##convert time from m:s format to s
-  TIME_S <- lubridate::ms(df$TIME)
-  TIME_S <- lubridate::period_to_seconds(TIME_S)
-  df <- cbind(df[, 1], TIME_S, df[, 2:ncol(df)])
+  df$TIME_S <- mmss_to_ss(df$TIME)
+  df <- df %>% 
+    tidytable::select(TIME, TIME_S, tidytable::everything())
   ##change to POSIXct for graphing later
   df$TIME <- as.POSIXct(strptime(df$TIME, format= "%M:%S"))
   ##convert all to numeric, to character first to preserve factors
@@ -150,9 +153,6 @@ test_data <- lapply(test_data,function(df) {
   
   df$VE_VCO2_SMA <- stats::filter(df$VE_VCO2, f30, method = "convolution",
                                   sides = 2, circular = TRUE)
-  
-  #df$VE_VO2_LOW <- df$VE_LOW/df$VO2_ABS_LOW
-  #df$VE_VCO2_LOW <- df$VE_LOW/df$VCO2_LOW
   
   
   df$EXCO2 <- ( ( (df$VCO2*df$VCO2)/df$VO2_ABS) - df$VCO2)
