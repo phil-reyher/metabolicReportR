@@ -36,6 +36,15 @@ regex_s <- function (df,x,y=0,unit="kg"){
   return(as.character(df[tmp_row,..tmp_col])
   )}
 
+########################### MM:SS to seconds converter #########################
+mmss_to_ss <- function(time){
+  time_components <- strsplit(time, "[:]")
+  time_components <- lapply(time_components, as.numeric)
+  TIME_S <- sapply(time_components, function(x) {
+    (x[1] * 60 + x[2])
+    })
+return(TIME_S)
+}
 ######################### Matlabs Changepoints function ########################
 findchangepts_std <- function(x) {
   m <- nrow(x)
