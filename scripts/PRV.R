@@ -743,31 +743,7 @@ ais_tbl <- lapply(max_tbl, function(df){
   out
 })
 
-
-################################ Bland Altmann #################################
-binder <- function(list,method){
-  bind_rows(list) %>%
-  select(VT1_TIME,VT2_TIME) %>% 
-  add_column(ID= partnames,.before = "VT1")%>%
-  add_column(method= method,.before = "VT1")
-}
-df_sec <- binder(cps_sec,"sec")
-df_5bin <- binder(cps_5bin,"5bin")
-df_10bin <- binder(cps_10bin,"10bin")
-df_15bin <- binder(cps_15bin,"15bin")
-
-df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
-library(blandr)
-
-##################################### WIP ######################################
-
-mapply(df = test_data, bin = test_data_10bin, 
-       FUN = function(df,bin){
-         
-         
-         
-       })
-
+############################## Exercise plots ##################################
 
 ex_plots <- mapply(df=test_data,dem=demo_data,vt=cps_10bin,SIMPLIFY = F,
                   FUN=function(df,dem,vt){
@@ -805,14 +781,28 @@ ex_plotlist <- marrangeGrob(ex_plots, nrow=1,ncol=1)
 ggsave("multipage.pdf", ex_plotlist, width = 11, height = 8.5, units = "in")
 
 
-
-plot(df$TIME_S,df$VO2_ABS_LOW,type = 'l')
-lines(bin$TIME_S,bin$VO2_ABS,type = 'l',col='red')
-lines(bin$TIME_S,bin$VO2_ABS_LOW, type= 'l', col='blue')
-
-
+################################################################################
 biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
             x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
 
 scale_x_datetime(date_labels = "%R")
 
+################################ Bland Altmann #################################
+binder <- function(list,method){
+  bind_rows(list) %>%
+    select(VT1_TIME,VT2_TIME) %>% 
+    add_column(ID= partnames,.before = "VT1")%>%
+    add_column(method= method,.before = "VT1")
+}
+df_sec <- binder(cps_sec,"sec")
+df_5bin <- binder(cps_5bin,"5bin")
+df_10bin <- binder(cps_10bin,"10bin")
+df_15bin <- binder(cps_15bin,"15bin")
+
+df_big <- bind_rows(df_sec,df_5bin,df_10bin,df_15bin)
+library(blandr)
+
+################################################################################
+plot(df$TIME_S,df$VO2_ABS_LOW,type = 'l')
+lines(bin$TIME_S,bin$VO2_ABS,type = 'l',col='red')
+lines(bin$TIME_S,bin$VO2_ABS_LOW, type= 'l', col='blue')
