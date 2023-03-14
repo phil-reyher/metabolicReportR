@@ -27,53 +27,21 @@ library(here)
 ########################### Global Vars/Options  ###############################
 dir <- here::here()
 setwd(dir)
-threshold_plots_dir <- 
+fpath <- file.path("data","single")
+fileList <- list.files(path = fpath, pattern = "*.csv",
+                        ignore.case = T, full.names = T)
 
 ################################# Functions ####################################
-source(here::here("scripts/functions/funs.R"))
-
+source(here::here("scripts/functions/0-globalFuns.R"))
+source(here::here("scripts/functions/1-import.R"))
+source(here::here("scripts/functions/2-extractRegex.R"))
 #################################### Import ####################################
-##get dir that script is in
-fpath <- file.path("data","single")
-file_list <- list.files(path = fpath, pattern = "*.csv",
-                        ignore.case = T, full.names = T)
-##read data
-##apply over file-list
-test_data <- lapply(file_list, function(x){ 
-  df <- fread(x, header = F, fill = T, sep = ",", quote = "\"", dec = ".",
-  na.strings = "")
-  df
-  })
+dataList <- import_filelist(fileList)
 
 ################### Extract demographics and test parameters ###################
-
-##save participant names in array for later
-partnames <- sapply(test_data, function(df) {
-  NAME <- regex_s(df,"\\bname\\b")
-})
-
-names(test_data) <- partnames
-
-demo_data <- lapply(test_data, function(df) {
-  NAME <- regex_s(df,"\\bname\\b")
-  AGE <- regex_s(df,"\\bage\\b")
-  SEX <- regex_s(df,"\\bsex\\b")
-  MASS <- regex_s(df,"\\bweight\\b",unit="kg")
-  DEVICE <- regex_s(df,"^(?=.*(exercise))(?=.*(device)).*$")
-  PB <- regex_s(df,"^(?=.*(baro))(?=.*(press)).*$")
-  TEMP <- regex_s(df,"^(?=.*(insp))(?=.*(temp)).*$")
-  RH <- regex_s(df,"^(?=.*(insp))(?=.*(humid)).*$")
-  EV_WU <- regex_s(df,"^(?=.*(warm))(?=.*(up)).*$",1)
-  ifelse(length(EV_WU)==0,EV_WU <- NA,EV_WU)
-  EV_EX <- regex_s(df,"^(?=.*(start))(?=.*(exercise)).*$",1)
-  ifelse(length(EV_EX)==0,EV_EX <- NA,EV_EX)
-  EV_CD <- regex_s(df,"^(?=.*(cool))(?=.*(down)).*$",1)
-  ifelse(length(EV_CD)==0,EV_CD <- NA,EV_CD)
-  
-  df1 <- data.frame(NAME, AGE, SEX, MASS, DEVICE, PB, TEMP, RH, EV_WU, EV_EX,
-                    EV_CD)
-  df1 <- df1 %>% select(where(~any(!is.na(.))))
-  })
+participantNames <- extract_participant_names(dataList)
+names(dataList) <- participantNames
+demographicsList <- extract_demographic_data(dataList)
 
 ##function to extract the dates from file_list and append it to the demographics
 ##list
