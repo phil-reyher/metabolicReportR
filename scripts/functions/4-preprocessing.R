@@ -22,9 +22,11 @@ compute_ventilatory_vars <- function(dataList){
   dataList <- lapply(dataList, function(df){
     df$exco2 <- ( ( (df$vco2*df$vco2)/df$vo2abs) - df$vco2)
     df$exve <- ( ( (df$ve*df$ve)/df$vco2) - df$ve)
-    
     #no forgetti removi!!!
     df$heartrate <- 100
+    ###################
+    df$vo2maxPercentage <- df$vo2relLow/max(df$vo2relLow)
+    df$hrmax <- df$heartrate/max(df$heartrate)
     df
   })
 return(dataList)
@@ -42,7 +44,7 @@ return(testDataTruncated)
 
 ############################ Interpolate to Seconds ############################
 interpolate_to_seconds <- function(dataList){
-  lapply(dataList, function(df){
+  testDataInterpolated <- lapply(dataList, function(df){
     interpolate <- function(df) {
       ## first make sure data only contains numeric columns
       dataNum <- df %>%
@@ -61,19 +63,7 @@ interpolate_to_seconds <- function(dataList){
     out <- interpolate(df)
     out
   })
-}
-
-
-bin <- function(df,bin){
-  
-  dataNum <- df %>%
-    select(where(is.numeric))
-  
-  out <- dataNum %>%
-    mutate(across(1,\(x) round(x / bin) * bin)) %>% 
-    group_by(1) %>%
-    summarise(across(everything(),mean, na.rm = TRUE) )
-  out
+return(testDataInterpolated)
 }
 
 ################################ Bin Averaging #################################
@@ -87,4 +77,5 @@ apply_bin_average <- function(dataList,bin){
       summarise(across(everything(),mean, na.rm = TRUE) )
     out
   })
+return(testDataBinned)
 }

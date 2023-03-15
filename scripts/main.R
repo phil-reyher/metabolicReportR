@@ -23,28 +23,30 @@ library(signal)
 library(gridExtra)
 library(grid)
 library(here)
-########################### Global Vars/Options  ###############################
+############################# Global Vars/Options ##############################
 dir <- here::here()
 setwd(dir)
 fpath <- file.path("data","single")
 fileList <- list.files(path = fpath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
-################################# Functions ####################################
+################################## Functions ###################################
 source(here::here("scripts/functions/0-globalFuns.R"))
 source(here::here("scripts/functions/1-import.R"))
 source(here::here("scripts/functions/2-extractRegex.R"))
 source(here::here("scripts/functions/3-tidying.R"))
 source(here::here("scripts/functions/4-preprocessing.R"))
+source(here::here("scripts/functions/5-vo2ThresholdsMaxExtraction.R"))
+source(here::here("scripts/functions/6-reportTables.R"))
 
 #################################### Import ####################################
 testData <- import_filelist(fileList)
-################### Extract demographics and test parameters ###################
+################### Extract Demographics and Test-parameters ###################
 participantNames <- extract_participant_names(testData)
 names(testData) <- participantNames
 metadata <- extract_metadata(testData)
 metadata <- extract_test_date(extractFrom = fileList,
                                       appendTo = metadata)
-################################ Clean dataset #################################
+############################### Tidy Up Dataset ################################
 testData <- tidy_up(testData)
 ################################## Extend metadata #############################
 metadata <- extract_start_end_indices(extractFrom = testData,
@@ -60,237 +62,13 @@ testDataTruncated <- truncate_data(dataList = testData,metadata = metadata)
 testDataInterpolatedSeconds <- interpolate_to_seconds(testDataTruncated)
 #binning
 testData10Binned <- apply_bin_average(testDataInterpolatedSeconds,bin = 10)
-
-####################### Calculation of VT1, VT2 ################################
-
-cps_input <- function(test_data){
-  lapply(test_data, function(df){
-  ##truncate dataframe to ranges in which VT1/VT2 can occur (NASA Paper,2021)
-  vt1_i_beg <- which.min( abs(df$TIME_S-quantile(df$TIME_S,0.3)))
-  vt1_i_end <- which.min( abs(df$TIME_S-quantile(df$TIME_S,0.8)))
-  vt2_i_beg <- which.min( abs(df$TIME_S-quantile(df$TIME_S,0.5)))
-  
-  df_vt1 <- df %>% slice(vt1_i_beg:vt1_i_end)
-  df_vt2 <- df %>% slice_tail(n=vt2_i_beg+1)
-  ##breakpointanalyses
-  ##VT1##
-  ##V-Slope##
-  vslop <- df_vt1 %>% select(VO2_ABS_LOW,VCO2_LOW) %>% as.matrix(.) %>% t(.)
-  VT1VSLOP_I <- findchangepts_std(vslop)+vt1_i_beg-1
-  #EXCO2##
-  exco2 <- df_vt1 %>% select(EXCO2) %>% as.matrix(.) %>% t(.)
-  VT1EXCO2_I <- findchangepts_std(exco2)+vt1_i_beg-1
-  ##VT2##
-  ##V-Slope##
-  vslop2 <- df_vt2 %>% select(VCO2,VE) %>% as.matrix(.) %>% t(.)
-  VT2VSLOP_I <- findchangepts_std(vslop2)+vt2_i_beg-1
-  ##EXVE##
-  exve <- df_vt2 %>% select(EXVE) %>% as.matrix(.) %>% t(.)
-  VT2EXVE_I <- findchangepts_std(exve)+vt2_i_beg-1
-  ##combine
-  VT1_I <- round((VT1EXCO2_I+VT1VSLOP_I)/2)
-  VT2_I <- round((VT2EXVE_I+VT2VSLOP_I)/2)
-  VT1_TIME <- df$TIME_S[VT1_I]
-  VT2_TIME <- df$TIME_S[VT2_I]
-  VT1_VO2ABS <- df$VO2_ABS_LOW[VT1_I]
-  VT2_VO2ABS <- df$VO2_ABS_LOW[VT2_I]
-  VT1_VO2REL <- df$VO2_REL_LOW[VT1_I]
-  VT2_VO2REL <- df$VO2_REL_LOW[VT2_I]
-
-  VT1_WORK <- predict_work(df,VT1_VO2ABS)
-  VT2_WORK <- predict_work(df,VT2_VO2ABS)
-  
-  VT1_HR <- df$HR[VT1_I]
-  VT2_HR <- df$HR[VT2_I]
-  
-  VT1_VO2PERC <- df$VO2_ABS_LOW[VT1_I]
-  VT2_VO2PERC <- df$VO2_ABS_LOW[VT2_I]
-  VT1_WORKPERC <- VT1_WORK
-  VT2_WORKPERC <- VT2_WORK
-  VT1_HRPERC <- df$HR[VT1_I]
-  VT2_HRPERC <- df$HR[VT2_I]
-  
-  df <- data.frame(VT1EXCO2_I, VT1VSLOP_I,VT2EXVE_I, VT2VSLOP_I,
-                   VT1_I,VT2_I,  VT1_TIME,VT2_TIME,  VT1_VO2ABS,VT2_VO2ABS,
-                   VT1_VO2REL,VT2_VO2REL,  VT1_WORK,VT2_WORK,  VT1_HR,VT2_HR,
-                   VT1_VO2PERC,VT2_VO2PERC,  VT1_WORKPERC,VT2_WORKPERC,  
-                   VT1_HRPERC,VT2_HRPERC)
-  df
-    })
-}
-
-cps_10bin <- cps_input(test_data_10bin)
-
-####################### Changepoints plotting ##################################
-#plotting function
-plist_cps_func <- function(test_data,cps_data){
-  plist <- mapply(df=test_data, vt=cps_data, SIMPLIFY = F,
-                  FUN = function(df,vt)
-        {
-         exco2 <- ggplot(df, aes(x=TIME_S))+
-           geom_point(aes(y=EXCO2),colour='blue')+
-           geom_vline(xintercept = df$TIME_S[vt$VT1EXCO2_I], colour='green')+
-           annotate(x=df$TIME_S[vt$VT1EXCO2_I],y=+Inf,
-                    label=paste0("VT1=",df$TIME_S[vt$VT1EXCO2_I]," s"),
-                    vjust=2,geom="label")+
-           theme_bw()
-         
-         vslop1 <- ggplot(df, aes(x=VO2_ABS))+
-           geom_point(aes(y=VCO2),colour='blue')+
-           geom_vline(xintercept = df$VO2_ABS[vt$VT1VSLOP_I], colour='green')+
-           annotate(x=df$VO2_ABS[vt$VT1VSLOP_I],y=+Inf,
-                    label=paste0("VT1=",df$TIME_S[vt$VT1VSLOP_I]," s"),
-                    vjust=2,geom="label")+
-           theme_bw()
-         
-         exve <- ggplot(df, aes(x=TIME_S))+
-           geom_point(aes(y=EXVE),colour='blue')+
-           geom_vline(xintercept = df$TIME_S[vt$VT2EXVE_I], colour='green')+
-           annotate(x=df$TIME_S[vt$VT2EXVE_I],y=+Inf,
-                    label=paste0("VT2=",df$TIME_S[vt$VT2EXVE_I]," s"),
-                    vjust=2,geom="label")+
-           theme_bw()
-         
-         vslop2 <- ggplot(df, aes(x=VCO2))+
-           geom_point(aes(y=VE),colour='blue')+
-           geom_vline(xintercept = df$VCO2[vt$VT2VSLOP_I], colour='green')+
-           annotate(x=df$VCO2[vt$VT2VSLOP_I],y=+Inf,
-                    label=paste0("VT2=",df$TIME_S[vt$VT2VSLOP_I]," s"),
-                    vjust=2,geom="label")+
-           theme_bw()
-         
-         bigplot <- ggplot(df, aes(x=TIME_S))+
-           coord_cartesian(xlim = c(300, 1100),ylim = c(7.5,45))+
-           scale_x_continuous(name="Time (s)",
-                              breaks=seq(300,1150,50) )+
-           scale_y_continuous(name="VE/VO2 | VE/VCO2", breaks=seq(10,45,5),
-           sec.axis = sec_axis(~.*10,name='Work' ) )+
-           geom_point(aes(y=VE_VO2, colour='VE/VO2') )+
-           geom_point(aes(y=VE_VCO2, colour='VE/VCO2') )+
-           geom_vline(xintercept = df$TIME_S[vt$VT1_I],colour='black',
-                      linetype = "dotted")+
-           annotate(x=df$TIME_S[vt$VT1_I],y=+Inf,
-                    label=paste0("VT1=",df$TIME_S[vt$VT1_I]," s"),
-                    vjust=2,geom="label")+
-           geom_vline(xintercept = df$TIME_S[vt$VT2_I],colour='green',
-                      linetype = "longdash")+
-           annotate(x=df$TIME_S[vt$VT2_I],y=+Inf,
-                    label=paste0("VT2=",df$TIME_S[vt$VT2_I]," s"),
-                    vjust=2,geom="label")+
-           geom_area(aes(y = (WORK/10),colour="Work"), fill ="lightblue", 
-                     alpha = 0.4) +
-           scale_color_manual(name=' ',
-                          breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
-              values=c('VE/VO2'='blue', 'VE/VCO2'='red', 'Work'='lightblue'),
-              guides(colour = guide_legend(override.aes = list(size = 8) ) ) )+
-          theme_bw()+
-           guides(shape = guide_legend(override.aes = list(size = 1)))+
-           guides(color = guide_legend(override.aes = list(size = 1)))+
-           theme(legend.title = element_blank(),
-                 legend.text = element_text(size = 8),
-                 legend.position = c(.05, .95),
-                 legend.justification = c("left", "top"),
-                 legend.box.just = "right",
-                 legend.margin = margin(6, 6, 6, 6) )
-         
-         plots <- list(exco2,vslop1,exve,vslop2,bigplot)
-         lay <- rbind(c(1,1,2,2),
-                      c(1,1,2,2),
-                      c(3,3,4,4),
-                      c(3,3,4,4),
-                      c(5,5,5,5),
-                      c(5,5,5,5),
-                      c(5,5,5,5),
-                      c(5,5,5,5),
-                      c(5,5,5,5))
-
-         out <- arrangeGrob(grobs = plots, layout_matrix = lay)
-       })
-  return(plist)
-}
-# #create plots
-plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
-# #save individual plots
-partnames_formatted <- gsub(",", "_", partnames)
-partnames_formatted <- gsub(" ", "", partnames_formatted)
-purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
-  ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
-         height = 8.5, units = "in")
-})
-partnames_formatted <- as.list(partnames_formatted)
-
-################################# Test Details #################################
-details_tbl <- lapply(demo_data,function(dem){
-  
-  out <- dem %>% select(TEST_DAT,TEMP,RH,PB) %>%
-    mutate(across(TEST_DAT,~format(.x, format = "%d-%b-%Y"))) %>% 
-    mutate(across(2:4,~format(round(as.numeric(.),1), nsmall=1))) 
-  out
-  })
-
-############################# Table summary ####################################
-max_tbl <- lapply(test_data, function(df){
-  
-  MAX_I <- which.max(df$VO2_ABS_LOW)
-  MAX_TIME <- df$TIME_S[MAX_I]
-  MAX_VO2ABS <- max(df$VO2_ABS_LOW)
-  MAX_VO2REL <- max(df$VO2_REL_LOW)
-  MAX_WORK <- predict_work(df,MAX_VO2ABS)
-  MAX_HR <- max(df$HR)
-  
-  MAX_VO2PERC <- 1
-  MAX_WORKPERC <- 1
-  MAX_HRPERC <- 1
-  
-  out <- data.frame(MAX_I,MAX_TIME,MAX_VO2ABS,MAX_VO2REL,MAX_WORK,MAX_HR,
-                   MAX_VO2PERC,MAX_WORKPERC,MAX_HRPERC)
-  out
-  
-})
-
-summary_tbl <- mapply(cp=cps_10bin,max=max_tbl,SIMPLIFY = F,
-                  FUN = function(cp,max){
-  
-  cp$VT1_VO2PERC <- cp$VT1_VO2PERC/max$MAX_VO2ABS
-  cp$VT2_VO2PERC <- cp$VT2_VO2PERC/max$MAX_VO2ABS
-  
-  cp$VT1_WORKPERC <- cp$VT1_WORKPERC/max$MAX_WORK
-  cp$VT2_WORKPERC <- cp$VT2_WORKPERC/max$MAX_WORK
-  
-  cp$VT1_HRPERC <- cp$VT1_HRPERC/max$MAX_HR
-  cp$VT2_HRPERC <- cp$VT2_HRPERC/max$MAX_HR
-  
-  cp <- cbind(cp,max)
-  
-  cp <- select(cp, -c(VT1EXCO2_I,VT1VSLOP_I,VT2VSLOP_I,VT2EXVE_I)) %>%
-  pivot_longer(everything(),names_sep = "_",
-               names_to = c("VARIABLE","measurement")) %>%
-  pivot_wider(id_cols =VARIABLE, names_from = measurement, values_from = value,
-              names_repair = "check_unique")
-  
-  out <- cp[order(cp$VO2ABS),]
-  out
-})
-
-summary_formatted_tbl <- lapply(summary_tbl, function(df){
-  df <- df %>% mutate(across(ends_with("PERC",ignore.case =T),
-                             ~round(.*100,digits = 0) ) ) %>%
-    mutate(across(c("WORK","HR"),~round(.,digits = 0) )) %>% 
-    mutate(across(c("VO2ABS","VO2REL"),~format(round(.,digits = 1),nsmall = 1)))
-  out <- df %>% select(VARIABLE,WORK,WORKPERC,VO2ABS,VO2REL,VO2PERC,HR,HRPERC)
-  
-  out
-})
-
-#################################### GXT Table #################################
-#add perc, for later gxt_tbl, function
-test_data_trunc<- lapply(test_data_trunc, function(df){
-  
-  df$VO2MAX_PERC <- df$VO2_REL_LOW/max(df$VO2_REL_LOW)
-  df$HRMAX_PERC <- df$HR/max(df$HR)
-  df
-})
-
+##################### Calculation of VT1, VT2, Max #############################
+changepointsData <- find_ventilatory_thresholds_data(testData10Binned)
+vo2maxData <- find_vo2max_data(testData)
+summaryTables <- create_summary_tables(changepointsData,vo2maxData)
+################################ Report-Tables #################################
+summaryTablesFormatted <- format_summary_table(summaryTables)
+testDetailsTable <-format_test_details(metadata)
 gxt_tbl <- lapply(test_data_trunc, function(df){
   df <- df %>% slice(1:which.max(df$WORK))
   WORK <- df$WORK
@@ -312,7 +90,6 @@ gxt_tbl <- lapply(test_data_trunc, function(df){
                                                          nsmall = 1)) )
   out
 })
-
 #change last stage with max
 gxt_tbl <- mapply(gxt=gxt_tbl,max=max_tbl,SIMPLIFY = F,function(gxt,max){
   gxt <- gxt[-nrow(gxt),]
@@ -469,6 +246,104 @@ ais_tbl <- lapply(max_tbl, function(df){
   out <- tr_zones
   out
 })
+
+####################### Changepoints plotting ##################################
+#plotting function
+plist_cps_func <- function(test_data,cps_data){
+  plist <- mapply(df=test_data, vt=cps_data, SIMPLIFY = F,
+                  FUN = function(df,vt)
+                  {
+                    exco2 <- ggplot(df, aes(x=TIME_S))+
+                      geom_point(aes(y=EXCO2),colour='blue')+
+                      geom_vline(xintercept = df$TIME_S[vt$VT1EXCO2_I], colour='green')+
+                      annotate(x=df$TIME_S[vt$VT1EXCO2_I],y=+Inf,
+                               label=paste0("VT1=",df$TIME_S[vt$VT1EXCO2_I]," s"),
+                               vjust=2,geom="label")+
+                      theme_bw()
+                    
+                    vslop1 <- ggplot(df, aes(x=VO2_ABS))+
+                      geom_point(aes(y=VCO2),colour='blue')+
+                      geom_vline(xintercept = df$VO2_ABS[vt$VT1VSLOP_I], colour='green')+
+                      annotate(x=df$VO2_ABS[vt$VT1VSLOP_I],y=+Inf,
+                               label=paste0("VT1=",df$TIME_S[vt$VT1VSLOP_I]," s"),
+                               vjust=2,geom="label")+
+                      theme_bw()
+                    
+                    exve <- ggplot(df, aes(x=TIME_S))+
+                      geom_point(aes(y=EXVE),colour='blue')+
+                      geom_vline(xintercept = df$TIME_S[vt$VT2EXVE_I], colour='green')+
+                      annotate(x=df$TIME_S[vt$VT2EXVE_I],y=+Inf,
+                               label=paste0("VT2=",df$TIME_S[vt$VT2EXVE_I]," s"),
+                               vjust=2,geom="label")+
+                      theme_bw()
+                    
+                    vslop2 <- ggplot(df, aes(x=VCO2))+
+                      geom_point(aes(y=VE),colour='blue')+
+                      geom_vline(xintercept = df$VCO2[vt$VT2VSLOP_I], colour='green')+
+                      annotate(x=df$VCO2[vt$VT2VSLOP_I],y=+Inf,
+                               label=paste0("VT2=",df$TIME_S[vt$VT2VSLOP_I]," s"),
+                               vjust=2,geom="label")+
+                      theme_bw()
+                    
+                    bigplot <- ggplot(df, aes(x=TIME_S))+
+                      coord_cartesian(xlim = c(300, 1100),ylim = c(7.5,45))+
+                      scale_x_continuous(name="Time (s)",
+                                         breaks=seq(300,1150,50) )+
+                      scale_y_continuous(name="VE/VO2 | VE/VCO2", breaks=seq(10,45,5),
+                                         sec.axis = sec_axis(~.*10,name='Work' ) )+
+                      geom_point(aes(y=VE_VO2, colour='VE/VO2') )+
+                      geom_point(aes(y=VE_VCO2, colour='VE/VCO2') )+
+                      geom_vline(xintercept = df$TIME_S[vt$VT1_I],colour='black',
+                                 linetype = "dotted")+
+                      annotate(x=df$TIME_S[vt$VT1_I],y=+Inf,
+                               label=paste0("VT1=",df$TIME_S[vt$VT1_I]," s"),
+                               vjust=2,geom="label")+
+                      geom_vline(xintercept = df$TIME_S[vt$VT2_I],colour='green',
+                                 linetype = "longdash")+
+                      annotate(x=df$TIME_S[vt$VT2_I],y=+Inf,
+                               label=paste0("VT2=",df$TIME_S[vt$VT2_I]," s"),
+                               vjust=2,geom="label")+
+                      geom_area(aes(y = (WORK/10),colour="Work"), fill ="lightblue", 
+                                alpha = 0.4) +
+                      scale_color_manual(name=' ',
+                                         breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
+                                         values=c('VE/VO2'='blue', 'VE/VCO2'='red', 'Work'='lightblue'),
+                                         guides(colour = guide_legend(override.aes = list(size = 8) ) ) )+
+                      theme_bw()+
+                      guides(shape = guide_legend(override.aes = list(size = 1)))+
+                      guides(color = guide_legend(override.aes = list(size = 1)))+
+                      theme(legend.title = element_blank(),
+                            legend.text = element_text(size = 8),
+                            legend.position = c(.05, .95),
+                            legend.justification = c("left", "top"),
+                            legend.box.just = "right",
+                            legend.margin = margin(6, 6, 6, 6) )
+                    
+                    plots <- list(exco2,vslop1,exve,vslop2,bigplot)
+                    lay <- rbind(c(1,1,2,2),
+                                 c(1,1,2,2),
+                                 c(3,3,4,4),
+                                 c(3,3,4,4),
+                                 c(5,5,5,5),
+                                 c(5,5,5,5),
+                                 c(5,5,5,5),
+                                 c(5,5,5,5),
+                                 c(5,5,5,5))
+                    
+                    out <- arrangeGrob(grobs = plots, layout_matrix = lay)
+                  })
+  return(plist)
+}
+# #create plots
+plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
+# #save individual plots
+partnames_formatted <- gsub(",", "_", partnames)
+partnames_formatted <- gsub(" ", "", partnames_formatted)
+purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
+  ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
+         height = 8.5, units = "in")
+})
+partnames_formatted <- as.list(partnames_formatted)
 
 ############################## Exercise plots ##################################
 ex_plots <- mapply(df=test_data,dem=demo_data,vt=cps_10bin,SIMPLIFY = F,
