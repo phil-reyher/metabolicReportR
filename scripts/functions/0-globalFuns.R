@@ -76,10 +76,10 @@ findchangepts_std <- function(x) {
 
 
 ########################### Predict work, linear model #########################
-predict_work <- function(df,VO2_VAL){
-  df <- df %>% slice(1:which.max(df$WORK))
-  model <- lm(WORK ~ VO2_ABS_LOW,data = df)
-  new_observations <- data.frame(VO2_ABS_LOW=VO2_VAL)
+predict_work <- function(df,vo2Val){
+  df <- df %>% slice(1:which.max(df$work))
+  model <- lm(work ~ vo2AbsLow,data = df)
+  new_observations <- data.frame(vo2AbsLow=vo2Val)
   predicted_vals <- predict(model,newdata = new_observations)
   return(predicted_vals)
 }

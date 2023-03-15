@@ -8,13 +8,12 @@
 #                                                                              #
 # Code created:  2022-10-28                                                    #
 # Last updated:  2022-10-28                                                    #
-# Source:        C:/Users/reyhe/Documents/Parvo                                #
+# Source:        /metabolic_reportR/scripts/                                   #
 #                                                                              #
 # Comment:       Script aims to automise the creation of plots using the Parvo #
 #                Metabolic Cart data                                           #
 #                                                                              #
 ################################################################################
-
 ################################### Packages ###################################
 library(purrr)
 library(data.table)
@@ -30,168 +29,37 @@ setwd(dir)
 fpath <- file.path("data","single")
 fileList <- list.files(path = fpath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
-
 ################################# Functions ####################################
 source(here::here("scripts/functions/0-globalFuns.R"))
 source(here::here("scripts/functions/1-import.R"))
 source(here::here("scripts/functions/2-extractRegex.R"))
+source(here::here("scripts/functions/3-tidying.R"))
+source(here::here("scripts/functions/4-preprocessing.R"))
+
 #################################### Import ####################################
-dataList <- import_filelist(fileList)
-
+testData <- import_filelist(fileList)
 ################### Extract demographics and test parameters ###################
-participantNames <- extract_participant_names(dataList)
-names(dataList) <- participantNames
-demographicsList <- extract_demographic_data(dataList)
-
-##function to extract the dates from file_list and append it to the demographics
-##list
-##apply over both lists
-demo_data <- mapply(df = demo_data, x = file_list, SIMPLIFY = F,
-  FUN = function(df,x){
-  dat <- regmatches(x, regexpr("\\d{8}", x))
-  df$TEST_DAT <- as.Date(dat, format = "%Y%m%d")
-  df
-  })
-
+participantNames <- extract_participant_names(testData)
+names(testData) <- participantNames
+metadata <- extract_metadata(testData)
+metadata <- extract_test_date(extractFrom = fileList,
+                                      appendTo = metadata)
 ################################ Clean dataset #################################
-test_data <- lapply(test_data, function(df) {
-  ##find indices of string "time", this is where the spiro data starts
-  tmp <- which(sapply(df, function(x) {grepl("TIME",fixed = T,x)}) )-1
-  ##finally remove the mess from the top
-  df <- slice(df,-(1:tmp) )
-  ##Column names
-  ##combine the two header rows
-  coln <- paste(df[1,],df[2,],sep = "")
-  ## clean up NAs
-  coln <- gsub("NA","",coln)
-  ##remove whitespace
-  coln <- gsub(" ","",coln)
-  ##standardize colnames
-  coln <- sub("^(?=.*(VO2))(?=.*(kg)).*$","VO2_REL",coln,perl = T,
-              ignore.case = T)
-  coln <- sub("VO2STPD","VO2_ABS",coln,perl = T,ignore.case = T)
-  coln <- sub(".*work.*","WORK",coln,perl = T,ignore.case = T)
-  coln <- sub(".*hr.*","HR",coln,perl = T,ignore.case = T)
-  
-  coln <- toupper(gsub("STPD","",coln))
-  colnames(df) <- coln
-  ##remove anything but data
-  df <- slice(df,-(1:4) )
-  ##find first and last instance of NA to remove mess at the bottom
-  NAindex <- which(is.na(df[,1]))
-  firstNA <- min(NAindex)
-  l <- nrow(df)
-  df <- slice(df,-(firstNA:l) )
-  ##convert time from m:s format to s
-  df$TIME_S <- mmss_to_ss(df$TIME)
-  df <- df %>% 
-    tidytable::select(TIME, TIME_S, tidytable::everything())
-  ##change to POSIXct for graphing later
-  df$TIME <- as.POSIXct(strptime(df$TIME, format= "%M:%S"))
-  ##convert all to numeric, to character first to preserve factors
-  df <-df %>% mutate(across(.cols = !TIME, ~ as.character(.x) %>% 
-                              as.numeric(.x) ) )
-  ##rename problematic column names
-  df <- df %>% rename('VE_VO2'=`VE/VO2`,'VE_VCO2'=`VE/VCO2`)
-  
-  df
-})
-
-########################## Smoothing, computation of vars ######################
-test_data <- lapply(test_data,function(df) {
-  bf <- butter(3, 0.04, type= 'low')
-  df$VO2_ABS_LOW <- signal::filtfilt(bf, df$VO2_ABS)
-  df$VO2_REL_LOW <- signal::filtfilt(bf, df$VO2_REL)
-  
-  df$VCO2_LOW <- signal::filtfilt(bf, df$VCO2)
-  
-  df$VE_LOW <- signal::filtfilt(bf, df$VE)
-  
-  df$VE_VO2_LOW <- signal::filtfilt(bf, df$VE_VO2)
-  
-  df$VE_VCO2_LOW <- signal::filtfilt(bf, df$VE_VCO2)
-  
-  
-  f15 <- rep(1/15,15)
-  df$VO2_ABS_SMA <- stats::filter(df$VO2_ABS, f15, method = "convolution",
-                                  sides = 2, circular = TRUE)
-  
-  f30 <- rep(1/30,30)
-  df$VE_VO2_SMA <- stats::filter(df$VE_VO2, f30, method = "convolution",
-                                 sides = 2, circular = TRUE)
-  
-  df$VE_VCO2_SMA <- stats::filter(df$VE_VCO2, f30, method = "convolution",
-                                  sides = 2, circular = TRUE)
-  
-  
-  df$EXCO2 <- ( ( (df$VCO2*df$VCO2)/df$VO2_ABS) - df$VCO2)
-  df$EXVE <- ( ( (df$VE*df$VE)/df$VCO2) - df$VE)
-  
-  df$EXCO2_LOW <- ( ( (df$VCO2_LOW*df$VCO2_LOW)/df$VO2_ABS_LOW) - df$VCO2_LOW)
-  df$EXVE_LOW <- ( ( (df$VE_LOW*df$VE_LOW)/df$VCO2_LOW) - df$VE_LOW)
-  
-  #no forgetti removi!!!
-  df$HR <- 100
-  
-  df
-})
-
-############################# extend demo data #################################
-demo_data <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
-                    FUN= function(df,dem){
-                      ev_ex <- as.numeric(dem$EV_EX)*60
-                      ev_cd <- as.numeric(dem$EV_CD)*60
-                      beg <- which.max(df$TIME_S >= ev_ex)
-                      end <- which.max(df$TIME_S >= ev_cd)
-                      dem$EV_EX_I <- beg
-                      dem$EV_CD_I <- end
-                      dem
-                    })
-
-################################## Truncation ##################################
-test_data_trunc <- mapply(df=test_data, dem=demo_data, SIMPLIFY = F,
-                    FUN= function(df,dem){
-                    
-                    out <- df%>% slice(dem$EV_EX_I:dem$EV_CD_I)
-                    
-                    out
-                  })
-
-############################ Interpolation, Binning ############################
+testData <- tidy_up(testData)
+################################## Extend metadata #############################
+metadata <- extract_start_end_indices(extractFrom = testData,
+                                       appendTo = metadata)
+################################# Preprocessing ################################
+#filtering
+testData <- low_pass_filter(testData)
+#variable computation
+testData <- compute_ventilatory_vars(testData)
+#Truncation
+testDataTruncated <- truncate_data(dataList = testData,metadata = metadata)
 #interpolation
-test_data_sec <- lapply(test_data_trunc, function(df){
-  interpolate <- function(df) {
-    ## first make sure data only contains numeric columns
-    data_num <- df %>%
-      select(where(is.numeric))
-    
-      out <- lapply(data_num, \(i) approx(
-        x = data_num[[1]],
-        y = i,
-        xout = seq(min(data_num[[1]]), max(data_num[[1]], na.rm = TRUE), 1)
-      )$y
-      ) %>%
-        as.data.frame()
-    
-    out
-  }
-  out <- interpolate(df)
-  out
-  })
+testDataInterpolatedSeconds <- interpolate_to_seconds(testDataTruncated)
 #binning
-bin <- function(df,bin){
-  
-  data_num <- df %>%
-    select(where(is.numeric))
-  
-  out <- data_num %>%
-    mutate(across(1,\(x) round(x / bin) * bin)) %>% 
-    group_by(1) %>%
-    summarise(across(everything(),mean, na.rm = TRUE) )
-  out
-}
-
-test_data_10bin <- lapply(test_data_sec, \(df) bin(df,10) )
+testData10Binned <- apply_bin_average(testDataInterpolatedSeconds,bin = 10)
 
 ####################### Calculation of VT1, VT2 ################################
 

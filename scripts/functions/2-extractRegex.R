@@ -1,13 +1,13 @@
-
+################### Extract participant names out of dataList ##################
 extract_participant_names <- function(dataList){
   names <- sapply(dataList, function(df) {
     name <- regex_s(df,"\\bname\\b")
   })
   return(names)
 }
-
-extract_demographic_data <- function(dataList){
-  demographicsList <- lapply(dataList, function(df) {
+################### Extract demographics and test parameters ###################
+extract_metadata <- function(dataList){
+  metadata <- lapply(dataList, function(df) {
     name <- regex_s(df,"\\bname\\b")
     age <- regex_s(df,"\\bage\\b")
     sex <- regex_s(df,"\\bsex\\b")
@@ -28,5 +28,16 @@ extract_demographic_data <- function(dataList){
                       endExercise)
     df <- df %>% tidytable::select(tidytable::where(~any(!is.na(.))))
   })
-return(demographicsList)
+return(metadata)
+}
+
+################ Extract testdate append to demographicsList ###################
+extract_test_date <- function(extractFrom,appendTo){
+  testDates <- mapply(df = appendTo, vec = extractFrom, SIMPLIFY = F,
+                      FUN = function(df,vec){
+    testDate <- regmatches(vec, regexpr("\\d{8}", vec))
+    df$testDate <- as.Date(testDate, format = "%Y%m%d")
+    df
+  })
+return(testDates)
 }
