@@ -1,5 +1,5 @@
 ############################# Apply Lowpassfilter ##############################
-low_pass_filter <- function(dataList){
+apply_low_pass_filter <- function(dataList){
   filteredData <- lapply(dataList,function(df) {
     bf <- butter(3, 0.04, type= 'low')
     df$vo2absLow <- signal::filtfilt(bf, df$vo2abs)

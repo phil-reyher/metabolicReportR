@@ -1,6 +1,6 @@
 ############################# Format Test Details ##############################
-format_test_details <- function(metadata){
-  testDetails <- lapply(metadata,function(meta){
+format_test_details <- function(metadataList){
+  testDetails <- lapply(metadataList,function(meta){
     out <- meta %>% select(testDate,temperature,relativeHumidity,
                            barometricPressure) %>%
       mutate(across("testDate",~format(.x, format = "%d-%b-%Y"))) %>% 

@@ -55,7 +55,7 @@ metadata <- extract_start_end_indices(extractFrom = testData,
                                        appendTo = metadata)
 ################################ Preprocessing #################################
 #filtering
-testData <- low_pass_filter(testData)
+testData <- apply_low_pass_filter(testData)
 #variable computation
 testData <- compute_ventilatory_vars(testData)
 #Truncation
@@ -75,33 +75,11 @@ gxtTablesFormatted <- create_gxt_table(testDataTruncated,vo2maxData)
 coggansTablesFormatted <- create_coggans_zones_table(changepointsData)
 aisTablesFormatted <- create_ais_zones_table(vo2maxData)
 #################################### Plots #####################################
-plist_cps_10bin <- plist_cps_func(test_data_10bin,cps_10bin)
-
-# #save individual plots
-purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
-  ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
-         height = 8.5, units = "in")
-})
-partnames_formatted <- as.list(partnames_formatted)
-
-################################################################################
-biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
-            x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
+plotListGxt <- create_gxt_plots(testData,metadata,vo2maxData)
+plotListThresholds <- create_threshold_plots(testData10Binned,changepointsData)
+#################################### Export ####################################
 
 
-###################################let's render#################################
-rmarkdown::render(
-  input = loc,
-  output_file = paste0(current$branch, "_", this_year, "_", this_month ,".pdf"),
-  output_dir = "finished_reports",
-  intermediates_dir = "finished_reports/tex",
-  clean = TRUE,
-  output_options = list(
-    pdf_document = list(
-      keep_tex = TRUE,
-      includes = list(
-        in_header = "path/to/additional_latex_styling.tex"
-      )
-    )
-  )
-)
+
+
+
