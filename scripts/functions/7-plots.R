@@ -1,90 +1,91 @@
-create_gxt_plots <- function(dataList,metadataList,vt2DataList){
-  gxtPlots <- mapply(df=dataList,dem=metadataList,vt=vt2DataList,SIMPLIFY = F,
-  FUN=function(df,dem,vt){
-    p <-  ggplot(df,aes(x=TIME_S))+
-      geom_vline(xintercept = vt$VT1_TIME)+
-      annotate(x=vt$VT1_TIME,y=+Inf,
+create_gxt_plots <- function(dataList,metadataList,vtDataList){
+  gxtPlots <- mapply(df=dataList,meta=metadataList,vt=vtDataList,
+  SIMPLIFY = F, FUN=function(df,meta,vt){
+    
+    plot <-  ggplot(df,aes(x=time))+
+      geom_vline(xintercept = vt$vt1_time)+
+      annotate(x=vt$vt1_time,y=+Inf,
               label="VT1",vjust=2,geom="label")+
       
-      geom_vline(xintercept = vt$VT2_TIME)+
-      annotate(x=vt$VT2_TIME,y=+Inf,
+      geom_vline(xintercept = vt$vt2_time)+
+      annotate(x=vt$vt2_time,y=+Inf,
               label="VT2",vjust=2,geom="label")+
       
-      geom_vline(xintercept = df$TIME_S[dem$EV_EX_I])+
-      annotate(x=df$TIME_S[dem$EV_EX_I],y=+Inf,
+      geom_vline(xintercept = df$time[meta$startExerciseIndex])+
+      annotate(x=df$time[meta$startExerciseIndex],y=+Inf,
               label="Start",vjust=2,geom="label")+
       
-      geom_vline(xintercept = df$TIME_S[dem$EV_CD_I])+
-      annotate(x=df$TIME_S[dem$EV_CD_I],y=+Inf,
+      geom_vline(xintercept = df$time[meta$endExerciseIndex])+
+      annotate(x=df$time[meta$endExerciseIndex],y=+Inf,
               label="Cooldown",vjust=2,geom="label")+
       
-      geom_line(aes(y=VO2_ABS_LOW,group=1, colour='VO2'))+
+      geom_line(aes(y=vo2absLow,group=1, colour='VO2'))+
       guides(color = guide_legend(override.aes = list(size = 1.5)))+
       labs(color="Measurement")+
-      geom_line(aes(y=VCO2_LOW,group=2, colour='VCO2'))+
-      geom_area(aes(y = (WORK/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
+      geom_line(aes(y=vco2Low,group=2, colour='VCO2'))+
+      geom_area(aes(y = (work/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
       scale_color_manual(name='Measurement',
                         breaks=c('VO2', 'VCO2', 'VO2', 'WORK'),
                         values=c('VO2'='green', 'VCO2'='red', 'WORK'='blue'))
-    p
+    plot
   })
 return(gxtPlots)
 }
 
-create_threshold_plots <- function(test_data,cps_data){
-  plist <- mapply(df=test_data, vt=cps_data, SIMPLIFY = F,
+create_threshold_plots <- function(dataList,vtDataList){
+  plist <- mapply(df=dataList, vt=vtDataList, SIMPLIFY = F,
   FUN = function(df,vt) {
-    exco2 <- ggplot(df, aes(x=TIME_S))+
-      geom_point(aes(y=EXCO2),colour='blue')+
-      geom_vline(xintercept = df$TIME_S[vt$VT1EXCO2_I], colour='green')+
-      annotate(x=df$TIME_S[vt$VT1EXCO2_I],y=+Inf,
-               label=paste0("VT1=",df$TIME_S[vt$VT1EXCO2_I]," s"),
+    plotExco2 <- ggplot(df, aes(x=time))+
+      geom_point(aes(y=exco2),colour='blue')+
+      geom_vline(xintercept = df$time[vt$VT1EXCO2_I], colour='green')+
+      annotate(x=df$time[vt$VT1EXCO2_I],y=+Inf,
+               label=paste0("VT1=",df$time[vt$VT1EXCO2_I]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
-    vslop1 <- ggplot(df, aes(x=VO2_ABS))+
-      geom_point(aes(y=VCO2),colour='blue')+
-      geom_vline(xintercept = df$VO2_ABS[vt$VT1VSLOP_I], colour='green')+
+    plotVslope <- ggplot(df, aes(x=vo2abs))+
+      geom_point(aes(y=vco2),colour='blue')+
+      geom_vline(xintercept = df$vo2abs[vt$VT1VSLOP_I], colour='green')+
       annotate(x=df$VO2_ABS[vt$VT1VSLOP_I],y=+Inf,
-               label=paste0("VT1=",df$TIME_S[vt$VT1VSLOP_I]," s"),
+               label=paste0("VT1=",df$time[vt$VT1VSLOP_I]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
-    exve <- ggplot(df, aes(x=TIME_S))+
-      geom_point(aes(y=EXVE),colour='blue')+
-      geom_vline(xintercept = df$TIME_S[vt$VT2EXVE_I], colour='green')+
-      annotate(x=df$TIME_S[vt$VT2EXVE_I],y=+Inf,
-               label=paste0("VT2=",df$TIME_S[vt$VT2EXVE_I]," s"),
+    plotExVe <- ggplot(df, aes(x=time))+
+      geom_point(aes(y=exve),colour='blue')+
+      geom_vline(xintercept = df$time[vt$VT2EXVE_I], colour='green')+
+      annotate(x=df$time[vt$VT2EXVE_I],y=+Inf,
+               label=paste0("VT2=",df$time[vt$VT2EXVE_I]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
-    vslop2 <- ggplot(df, aes(x=VCO2))+
-      geom_point(aes(y=VE),colour='blue')+
-      geom_vline(xintercept = df$VCO2[vt$VT2VSLOP_I], colour='green')+
-      annotate(x=df$VCO2[vt$VT2VSLOP_I],y=+Inf,
-               label=paste0("VT2=",df$TIME_S[vt$VT2VSLOP_I]," s"),
+    plotVslope2 <- ggplot(df, aes(x=vco2))+
+      geom_point(aes(y=ve),colour='blue')+
+      geom_vline(xintercept = df$vco2[vt$VT2VSLOP_I], colour='green')+
+      annotate(x=df$vco2[vt$VT2VSLOP_I],y=+Inf,
+               label=paste0("VT2=",df$time[vt$VT2VSLOP_I]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
-    bigplot <- ggplot(df, aes(x=TIME_S))+
+    plotVentiEquiv <- ggplot(df, aes(x=time))+
       coord_cartesian(xlim = c(300, 1100),ylim = c(7.5,45))+
       scale_x_continuous(name="Time (s)",
                          breaks=seq(300,1150,50) )+
       scale_y_continuous(name="VE/VO2 | VE/VCO2", breaks=seq(10,45,5),
                          sec.axis = sec_axis(~.*10,name='Work' ) )+
-      geom_point(aes(y=VE_VO2, colour='VE/VO2') )+
-      geom_point(aes(y=VE_VCO2, colour='VE/VCO2') )+
-      geom_vline(xintercept = df$TIME_S[vt$VT1_I],colour='black',
+      geom_point(aes(y=vevo2, colour='VE/VO2') )+
+      geom_point(aes(y=vevco2, colour='VE/VCO2') )+
+      geom_vline(xintercept = df$time[vt$VT1_I],colour='black',
                  linetype = "dotted")+
-      annotate(x=df$TIME_S[vt$VT1_I],y=+Inf,
-               label=paste0("VT1=",df$TIME_S[vt$VT1_I]," s"),
+      annotate(x=df$time[vt$VT1_I],y=+Inf,
+               label=paste0("VT1=",df$time[vt$VT1_I]," s"),
                vjust=2,geom="label")+
-      geom_vline(xintercept = df$TIME_S[vt$VT2_I],colour='green',
+      geom_vline(xintercept = df$time[vt$VT2_I],colour='green',
                  linetype = "longdash")+
-      annotate(x=df$TIME_S[vt$VT2_I],y=+Inf,
-               label=paste0("VT2=",df$TIME_S[vt$VT2_I]," s"),
+      annotate(x=df$time[vt$VT2_I],y=+Inf,
+               label=paste0("VT2=",df$time[vt$VT2_I]," s"),
                vjust=2,geom="label")+
-      geom_area(aes(y = (WORK/10),colour="Work"), fill ="lightblue", 
+      geom_area(aes(y = (work/10),colour="Work"), fill ="lightblue", 
                 alpha = 0.4) +
       scale_color_manual(name=' ',breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
                          values=c('VE/VO2'='blue', 'VE/VCO2'='red',
@@ -101,7 +102,7 @@ create_threshold_plots <- function(test_data,cps_data){
             legend.box.just = "right",
             legend.margin = margin(6, 6, 6, 6) )
     
-    plots <- list(exco2,vslop1,exve,vslop2,bigplot)
+    plots <- list(plotExco2,plotVslope,plotExVe,plotVslope2,plotVentiEquiv)
     lay <- rbind(c(1,1,2,2),
                  c(1,1,2,2),
                  c(3,3,4,4),

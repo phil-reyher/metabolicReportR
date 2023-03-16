@@ -75,7 +75,7 @@ gxtTablesFormatted <- create_gxt_table(testDataTruncated,vo2maxData)
 coggansTablesFormatted <- create_coggans_zones_table(changepointsData)
 aisTablesFormatted <- create_ais_zones_table(vo2maxData)
 #################################### Plots #####################################
-plotListGxt <- create_gxt_plots(testData,metadata,vo2maxData)
+plotListGxt <- create_gxt_plots(testData,metadata,changepointsData)
 plotListThresholds <- create_threshold_plots(testData10Binned,changepointsData)
 #################################### Export ####################################
 
