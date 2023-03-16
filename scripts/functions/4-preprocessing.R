@@ -26,7 +26,7 @@ compute_ventilatory_vars <- function(dataList){
     df$heartrate <- 100
     ###################
     df$vo2maxPercentage <- df$vo2relLow/max(df$vo2relLow)
-    df$hrmax <- df$heartrate/max(df$heartrate)
+    df$hrmaxPercentage <- df$heartrate/max(df$heartrate)
     df
   })
 return(dataList)
