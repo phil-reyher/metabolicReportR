@@ -38,7 +38,8 @@ source(here::here("scripts/functions/3-tidying.R"))
 source(here::here("scripts/functions/4-preprocessing.R"))
 source(here::here("scripts/functions/5-ventilatoryParametersExtraction.R"))
 source(here::here("scripts/functions/6-reportTables.R"))
-
+source(here::here("scripts/functions/7-plots.R"))
+source(here::here("scripts/functions/8-export.R"))
 #################################### Import ####################################
 testData <- import_filelist(fileList)
 ################### Extract Demographics and Test-parameters ###################
