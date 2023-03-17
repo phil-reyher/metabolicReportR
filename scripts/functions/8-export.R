@@ -1,36 +1,47 @@
-
-
-
-
-
-################################# Export Plots #################################
-
-purrr::pwalk(list(partnames_formatted,plist_cps_10bin), function(name,p){
-  ggsave(paste0("./plots/individual_plots/",name,".pdf"), p, width = 11,
-         height = 8.5, units = "in")
-})
-partnames_formatted <- as.list(partnames_formatted)
-
 ############################## Create Large List ###############################
-
-biglist <- mapply(function(x,y,z){list(test_data=x,demo_data=y,changepoints=z)},
-                  x=test_data,y=demo_data,z=changepoints, SIMPLIFY = F)
-
+create_combined_list <- function(){
+bigList <- mapply(x=metadata,y=testDetailsTablesFormatted,
+                  z=summaryTablesFormatted,a=coggansTablesFormatted,
+                  b=aisTablesFormatted,c=participantNameList, SIMPLIFY = F,
+                  FUN = function(x,y,z,a,b,c){
+                    list(metadata=x,testDetails=y,
+                         summaryTable=z,cogganTable=a,aisTable=b,
+                         participantName=c)})
+return(bigList)
+}
 ###################################let's render#################################
-
-
+create_reports <- function(bigList){
+purrr::walk(bigList,function(participant){
 rmarkdown::render(
-  input = loc,
-  output_file = paste0(current$branch, "_", this_year, "_", this_month ,".pdf"),
+  input = "layout/report_layout.Rmd",
+  output_format = "pdf_document",
+  output_file = paste0(participant$participantName,".pdf"),
   output_dir = "finished_reports",
-  intermediates_dir = "finished_reports/tex",
+  intermediates_dir = "finished_reports/intermediates",
   clean = TRUE,
-  output_options = list(
-    pdf_document = list(
-      keep_tex = TRUE,
-      includes = list(
-        in_header = "path/to/additional_latex_styling.tex"
-      )
+  params = list(
+    includes = list(
+      in_header = "latex_input/additional_latex_styling.tex"
     )
   )
 )
+
+})
+}
+
+create_reports <- function(bigList){
+  purrr::walk(bigList,function(participant){
+    rmarkdown::render(
+      input = "layout/report_layout.Rmd",
+      rmarkdown::pdf_document(
+        toc =FALSE,
+        includes = rmarkdown::includes(in_header=latexStylePath)
+        ),
+      intermediates_dir = "finished_reports/intermediates",
+      output_file = paste0(participant$participantName,".pdf"),
+      output_dir = "finished_reports",
+      clean = TRUE
+    )
+  })
+}
+

@@ -1,6 +1,9 @@
-create_gxt_plots <- function(dataList,metadataList,vtDataList){
-  gxtPlots <- mapply(df=dataList,meta=metadataList,vt=vtDataList,
-  SIMPLIFY = F, FUN=function(df,meta,vt){
+create_gxt_plots <- function(dataList,metadataList,vtDataList,
+                             participantNameList,saveTo){
+  
+  purrr::pwalk(list(df = dataList, meta = metadataList, vt = vtDataList,
+                    name = participantNameList, path = saveTo),
+  function(df,meta,vt,name,path){
     
     plot <-  ggplot(df,aes(x=time))+
       geom_vline(xintercept = vt$vt1_time)+
@@ -28,42 +31,44 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList){
                         breaks=c('VO2', 'VCO2', 'VO2', 'WORK'),
                         values=c('VO2'='green', 'VCO2'='red', 'WORK'='blue'))
     plot
+    save_plot_named_as_to(plot = plot,name = name,path = path)
   })
-return(gxtPlots)
 }
 
-create_threshold_plots <- function(dataList,vtDataList){
-  plist <- mapply(df=dataList, vt=vtDataList, SIMPLIFY = F,
-  FUN = function(df,vt) {
+create_threshold_plots <- function(dataList,vtDataList,participantNameList,
+                                   saveTo){
+  purrr::pwalk(list(df = dataList, vt = vtDataList,
+                    name = participantNameList, path = saveTo),
+               function(df,vt,name,path) {
     plotExco2 <- ggplot(df, aes(x=time))+
       geom_point(aes(y=exco2),colour='blue')+
-      geom_vline(xintercept = df$time[vt$VT1EXCO2_I], colour='green')+
-      annotate(x=df$time[vt$VT1EXCO2_I],y=+Inf,
-               label=paste0("VT1=",df$time[vt$VT1EXCO2_I]," s"),
+      geom_vline(xintercept = df$time[vt$vt1_indexExCo], colour='green')+
+      annotate(x=df$time[vt$vt1_indexExCo],y=+Inf,
+               label=paste0("VT1=",df$time[vt$vt1_indexExCo]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
     plotVslope <- ggplot(df, aes(x=vo2abs))+
       geom_point(aes(y=vco2),colour='blue')+
-      geom_vline(xintercept = df$vo2abs[vt$VT1VSLOP_I], colour='green')+
-      annotate(x=df$VO2_ABS[vt$VT1VSLOP_I],y=+Inf,
-               label=paste0("VT1=",df$time[vt$VT1VSLOP_I]," s"),
+      geom_vline(xintercept = df$vo2abs[vt$vt1_indexVslope], colour='green')+
+      annotate(x=df$vo2abs[vt$vt1_indexVslope],y=+Inf,
+               label=paste0("VT1=",df$time[vt$vt1_indexVslope]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
     plotExVe <- ggplot(df, aes(x=time))+
       geom_point(aes(y=exve),colour='blue')+
-      geom_vline(xintercept = df$time[vt$VT2EXVE_I], colour='green')+
-      annotate(x=df$time[vt$VT2EXVE_I],y=+Inf,
-               label=paste0("VT2=",df$time[vt$VT2EXVE_I]," s"),
+      geom_vline(xintercept = df$time[vt$vt2_indexExVent], colour='green')+
+      annotate(x=df$time[vt$vt2_indexExVent],y=+Inf,
+               label=paste0("VT2=",df$time[vt$vt2_indexExVent]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
     plotVslope2 <- ggplot(df, aes(x=vco2))+
       geom_point(aes(y=ve),colour='blue')+
-      geom_vline(xintercept = df$vco2[vt$VT2VSLOP_I], colour='green')+
-      annotate(x=df$vco2[vt$VT2VSLOP_I],y=+Inf,
-               label=paste0("VT2=",df$time[vt$VT2VSLOP_I]," s"),
+      geom_vline(xintercept = df$vco2[vt$vt2_indexVslope], colour='green')+
+      annotate(x=df$vco2[vt$vt2_indexVslope],y=+Inf,
+               label=paste0("VT2=",df$time[vt$vt2_indexVslope]," s"),
                vjust=2,geom="label")+
       theme_bw()
     
@@ -75,15 +80,15 @@ create_threshold_plots <- function(dataList,vtDataList){
                          sec.axis = sec_axis(~.*10,name='Work' ) )+
       geom_point(aes(y=vevo2, colour='VE/VO2') )+
       geom_point(aes(y=vevco2, colour='VE/VCO2') )+
-      geom_vline(xintercept = df$time[vt$VT1_I],colour='black',
+      geom_vline(xintercept = df$time[vt$vt1_index],colour='black',
                  linetype = "dotted")+
-      annotate(x=df$time[vt$VT1_I],y=+Inf,
-               label=paste0("VT1=",df$time[vt$VT1_I]," s"),
+      annotate(x=df$time[vt$vt1_index],y=+Inf,
+               label=paste0("VT1=",df$time[vt$vt1_index]," s"),
                vjust=2,geom="label")+
-      geom_vline(xintercept = df$time[vt$VT2_I],colour='green',
+      geom_vline(xintercept = df$time[vt$vt2_index],colour='green',
                  linetype = "longdash")+
-      annotate(x=df$time[vt$VT2_I],y=+Inf,
-               label=paste0("VT2=",df$time[vt$VT2_I]," s"),
+      annotate(x=df$time[vt$vt2_index],y=+Inf,
+               label=paste0("VT2=",df$time[vt$vt2_index]," s"),
                vjust=2,geom="label")+
       geom_area(aes(y = (work/10),colour="Work"), fill ="lightblue", 
                 alpha = 0.4) +
@@ -103,17 +108,18 @@ create_threshold_plots <- function(dataList,vtDataList){
             legend.margin = margin(6, 6, 6, 6) )
     
     plots <- list(plotExco2,plotVslope,plotExVe,plotVslope2,plotVentiEquiv)
-    lay <- rbind(c(1,1,2,2),
-                 c(1,1,2,2),
-                 c(3,3,4,4),
-                 c(3,3,4,4),
-                 c(5,5,5,5),
-                 c(5,5,5,5),
-                 c(5,5,5,5),
-                 c(5,5,5,5),
-                 c(5,5,5,5))
+    layout <- rbind(c(1,1,2,2),
+                    c(1,1,2,2),
+                    c(3,3,4,4),
+                    c(3,3,4,4),
+                    c(5,5,5,5),
+                    c(5,5,5,5),
+                    c(5,5,5,5),
+                    c(5,5,5,5),
+                    c(5,5,5,5))
     
-    out <- arrangeGrob(grobs = plots, layout_matrix = lay)
+    plot <- arrangeGrob(grobs = plots, layout_matrix = layout)
+    
+    save_plot_named_as_to(plot = plot,name = name,path = path)
   })
-return(plist)
 }

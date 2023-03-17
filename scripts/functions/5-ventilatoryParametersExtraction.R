@@ -22,11 +22,15 @@ find_ventilatory_thresholds_data <- function(dataList){
     vSlope2Index <- findchangepts_std(vSlope2)+vt2IndexStart-1
     ##EXVE##
     excessVentilation <- dfVt2 %>% select(exve) %>% as.matrix(.) %>% t(.)
-    excessVentilationIndex <- findchangepts_std(excessVentilation)+
+    excessVentIndex <- findchangepts_std(excessVentilation)+
                               vt2IndexStart-1
     ##combine
+    vt1_indexVslope <- vSlopeIndex
+    vt1_indexExCo <- excessCo2Index
+    vt2_indexVslope <- vSlope2Index
+    vt2_indexExVent <- excessVentIndex
     vt1_index <- round((vSlopeIndex+excessCo2Index)/2)
-    vt2_index <- round((vSlope2Index+excessVentilationIndex)/2)
+    vt2_index <- round((vSlope2Index+excessVentIndex)/2)
     #´_´ seperator for pivot longer later
     vt1_time <- df$time[vt1_index]
     vt2_time <- df$time[vt2_index]
@@ -48,12 +52,13 @@ find_ventilatory_thresholds_data <- function(dataList){
     vt1_hrPercentage <- vt1_heartrate
     vt2_hrPercentage <- vt2_heartrate
     
-    out <- data.frame(vt1_index,vt2_index,vt1_time,vt2_time,vt1_vo2abs,
-                      vt2_vo2abs,vt1_vo2rel,vt2_vo2rel,vt1_work,vt2_work,
-                      vt1_heartrate,vt2_heartrate,
-                      vt1_vo2Percentage,vt2_vo2Percentage,
-                      vt1_workPercentage,vt2_workPercentage,
-                      vt1_hrPercentage,vt2_hrPercentage)
+    out <- data.frame(vt1_indexVslope , vt1_indexExCo , vt2_indexVslope ,
+                      vt2_indexExVent , vt1_index , vt2_index , vt1_time ,
+                      vt2_time , vt1_vo2abs , vt2_vo2abs , vt1_vo2rel ,
+                      vt2_vo2rel , vt1_work , vt2_work , vt1_heartrate ,
+                      vt2_heartrate , vt1_vo2Percentage , vt2_vo2Percentage ,
+                      vt1_workPercentage , vt2_workPercentage ,
+                      vt1_hrPercentage , vt2_hrPercentage)
     out
   })
 return(thresholdsTables)
@@ -92,6 +97,8 @@ create_summary_tables <- function(thresholdsTables,vo2maxTables){
     vtTable$vt1_hrPercentage <- vtTable$vt1_hrPercentage/maxTable$max_heartrate
     vtTable$vt2_hrPercentage <- vtTable$vt2_hrPercentage/maxTable$max_heartrate
     
+    vtTable <- vtTable %>% select(-c(vt1_indexVslope , vt1_indexExCo ,
+                                     vt2_indexVslope , vt2_indexExVent ))
     vtTable <- cbind(vtTable,maxTable)
     vtTable <- vtTable %>%
      pivot_longer(everything(),names_sep = "_",

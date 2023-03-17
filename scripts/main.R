@@ -15,6 +15,7 @@
 #                                                                              #
 ################################################################################
 ################################### Packages ###################################
+library(purrr)
 library(data.table)
 library(tidytable)
 library(ggplot2)
@@ -22,11 +23,14 @@ library(signal)
 library(gridExtra)
 library(grid)
 library(here)
+library(kableExtra)
 ############################# Global Vars/Options ##############################
 dir <- here::here()
 setwd(dir)
 gxtPlotsPath <- file.path("output","plots","gxt_plots")
 thresholdPlotsPath <- file.path("output","plots","threshold_plots")
+latexStylePath <- file.path(here::here(),"layout","latex_input",
+                            "additional_latex_styling.tex")
 filePath <- file.path("data","single")
 fileList <- list.files(path = filePath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
@@ -45,6 +49,7 @@ testData <- import_filelist(fileList)
 ################### Extract Demographics and Test-parameters ###################
 participantNames <- extract_participant_names(testData)
 participantNames <- gsub("[^[:alnum:]]", "", participantNames)
+participantNameList <- as.list(participantNames)
 names(testData) <- participantNames
 metadata <- extract_metadata(testData)
 metadata <- extract_test_date(extractFrom = fileList,
@@ -76,11 +81,13 @@ gxtTablesFormatted <- create_gxt_table(testDataTruncated,vo2maxData)
 coggansTablesFormatted <- create_coggans_zones_table(changepointsData)
 aisTablesFormatted <- create_ais_zones_table(vo2maxData)
 #################################### Plots #####################################
-plotListGxt <- create_gxt_plots(testData,metadata,changepointsData)
-plotListThresholds <- create_threshold_plots(testData10Binned,changepointsData)
+create_gxt_plots(testData,metadata,changepointsData,participantNameList,
+                 gxtPlotsPath)
+create_threshold_plots(testData10Binned,changepointsData,
+                       participantNameList,thresholdPlotsPath)
 #################################### Export ####################################
-
-
+combinedList <- create_combined_list()
+create_reports(combinedList)
 
 
 

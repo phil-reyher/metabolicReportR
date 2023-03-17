@@ -2,16 +2,13 @@
 output: 
   pdf_document:
     keep_tex: true
-    includes:
-      in_header: "latex_input/additional_latex_styling.tex"
+    includes: 
+      in-header: "/latex_input/additional_latex_styling.tex"
 ---
 
 ```{r setup, include=FALSE}
-load(file = ".RData") 
-library(kableExtra)
-library(tidytable)
-library(gridExtra)
-library(here)
+getwd()
+load("list.Rdata")
 options(knitr.table.format = "latex")
 knitr::opts_chunk$set(
 	echo = FALSE,
@@ -19,10 +16,9 @@ knitr::opts_chunk$set(
 	warning = FALSE,
 	error = FALSE
 )
-
+meta <- participant$metadata
 ```
 
-```{=tex}
 \begin{center}
 \textbf{\large \textbf{La Trobe Performance Hub} }
 \vspace{2ex   }
@@ -30,18 +26,21 @@ knitr::opts_chunk$set(
 \begingroup
 \setlength{\tabcolsep}{0.5em}
 \begin{tabularx}{\textwidth}{r l}
-\textbf{Athlete Name:} & `r dem$NAME`\\
-\textbf{Age:} & `r dem$AGE`\\
-\textbf{Body Mass:} & `r round(as.numeric(dem$MASS,digits=1))` kg\\
-\textbf{Exercise Device:} & `r dem$DEVICE`\\
+\textbf{Athlete Name:} & `r meta$name`\\
+\textbf{Age:} & `r meta$age`\\
+\textbf{Body Mass:} & `r round(as.numeric(meta$bodyMass,digits=1))` kg\\
+\textbf{Exercise Device:} & `r meta$device`\\
 \end{tabularx}
 \endgroup
 \vspace{4ex}
-```
+
 \fancysection{Test Details}
 
 ```{r}
-details %>% 
+library(tidytable)
+library(kableExtra)
+detailsTable <- participant$testDetails
+detailsTable %>% 
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
     kbl( booktabs = T, escape = FALSE,align = "c",
@@ -54,7 +53,8 @@ details %>%
 \fancysection{Summary Data}
 
 ```{r}
-summa %>%
+summaryTable <- participant$summaryTable
+summaryTable %>%
   mutate(across(everything(),as.character)) %>% 
   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   kbl( booktabs = T, escape = FALSE,align = "c",
@@ -65,35 +65,35 @@ summa %>%
                    "Heart Rate \\par (beats/min)",
                    "HR\\textsubscript{max} \\par (\\%)" ) ) %>% 
   kable_styling(latex_options = c("HOLD_position")) %>% 
-  row_spec(seq(1,nrow(summa),2), background="#fff3f3") %>% 
+  row_spec(seq(1,nrow(summaryTable),2), background="#fff3f3") %>% 
   column_spec(1:8,width = "\\\\dimexpr\\\\textwidth/8\\\\relax")
 ```
 
 \fancysection{GXT Data}
 
 ```{r}
-gxt %>%
-  mutate(across(everything(),as.character)) %>% 
-  mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
-  kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
-       col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (L/min)",
-                     "VO\\textsubscript{2} \\par (mL/kg/min)",
-                    "VO\\textsubscript{2max} \\par (\\%)",
-                    "Heart Rate \\par (beats/min)",
-                    "HR\\textsubscript{max} \\par (\\%)") ) %>% 
-  column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
-  row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
-    kable_styling(latex_options=c("HOLD_position")) %>% 
-  footnote(number = "Power at the last stage is an approximation relative to the VO\\\\textsubscript{2} achieved.",escape = F)
+# gxt %>%
+#   mutate(across(everything(),as.character)) %>% 
+#   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
+#   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
+#        col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (L/min)",
+#                      "VO\\textsubscript{2} \\par (mL/kg/min)",
+#                     "VO\\textsubscript{2max} \\par (\\%)",
+#                     "Heart Rate \\par (beats/min)",
+#                     "HR\\textsubscript{max} \\par (\\%)") ) %>% 
+#   column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
+#   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
+#     kable_styling(latex_options=c("HOLD_position")) %>% 
+#   footnote(number = "Power at the last stage is an approximation relative to the VO\\\\textsubscript{2} achieved.",escape = F)
 ```
 
-```{=tex}
 \newpage
 \fancysection{Training Zones - Modified Allen \& Coggan}
-```
+
 ```{r}
-coln <- colnames(coggan)
-coggan %>% 
+cogganTable <- participant$cogganTable
+coln <- colnames(cogganTable)
+cogganTable %>% 
   tidytable::mutate(across(.cols = everything(),as.character)) %>% 
   tidytable::mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   `colnames<-`(coln) %>% 
@@ -106,14 +106,15 @@ coggan %>%
   column_spec(1, width = "\\\\dimexpr7\\\\textwidth/100\\\\relax") %>% 
   column_spec(2, width = "\\\\dimexpr24\\\\textwidth/100\\\\relax") %>% 
   column_spec(3:8, width = "\\\\dimexpr11.5\\\\textwidth/100\\\\relax") %>% 
-  row_spec(seq(1,nrow(coggan),2), background="#fff3f3")
+  row_spec(seq(1,nrow(cogganTable),2), background="#fff3f3")
 ```
 
 \fancysection{Training Zones - AIS}
 
 ```{r}
-coln <- colnames(ais)
-ais %>% 
+aisTable <- participant$cogganTable
+coln <- colnames(aisTable)
+aisTable %>% 
   tidytable::mutate(across(.cols = everything(),as.character)) %>% 
   tidytable::mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
   `colnames<-`(coln) %>% 
@@ -126,16 +127,17 @@ ais %>%
   column_spec(1, width = "\\\\dimexpr7\\\\textwidth/100\\\\relax") %>% 
   column_spec(2, width = "\\\\dimexpr24\\\\textwidth/100\\\\relax") %>% 
   column_spec(3:8, width = "\\\\dimexpr11.5\\\\textwidth/100\\\\relax") %>% 
-  row_spec(seq(1,nrow(ais),2), background="#fff3f3")
+  row_spec(seq(1,nrow(aisTable),2), background="#fff3f3")
 ```
 
-```{=tex}
+
 \newpage
 \fancysection{Plots}
-```
+
 ```{r, out.width="100%", include=TRUE, fig.align="center"}
+participantName <- participant$participantName
 dir <- here::here("output","plots","threshold_plots")
-filepath <- file.path(dir, paste0(partname, ".pdf"))
+filepath <- file.path(dir, paste0(participantName, ".pdf"))
 knitr::include_graphics(filepath, rel_path = F)
 filepath
 ```

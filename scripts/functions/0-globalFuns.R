@@ -83,3 +83,9 @@ predict_work <- function(df,vo2Val){
   predicted_vals <- predict(model,newdata = new_observations)
   return(predicted_vals)
 }
+
+############################# Ggplot save function #############################
+save_plot_named_as_to <- function(plot,name,path){
+  ggsave(paste0(file.path(path,name),".pdf"), plot, width = 297 ,
+         height = 210 , units = "mm")
+}
