@@ -18,7 +18,8 @@ format_summary_table <- function(summaryTables){
       mutate(across(c(work,heartrate),~round(.,digits = 0) )) %>% 
       mutate(across(c(vo2abs,vo2rel),~format(round(.,digits = 1),
                                                  nsmall = 1)))
-    out <- df %>% select(-c(index,time))
+    out <- df %>% select(c(variable,work,workPercentage,vo2abs,vo2rel,
+                           vo2Percentage,heartrate,hrPercentage))
     out
   })
 return(formattedSummaryTable)
@@ -74,64 +75,65 @@ create_coggans_zones_table <- function(vt2DataList){
     lvl1HeartrateLow <- "-"
     lvl1HeartrateUp <- round(df$vt2_heartrate*0.68)
     lvl1RpeLow <- "-"
-    lvl1RpeLow <- 9
+    lvl1RpeUp <- 9
     
     lvl2WorkLow <- round(df$vt2_work*0.56)
     lvl2WorkUp <- round(df$vt2_work*0.75)
     lvl2HeartrateLow <- round(df$vt2_heartrate*0.69)
     lvl2HeartrateUp <- round(df$vt2_heartrate*0.83)
     lvl2RpeLow <- 9
-    lvl2RpeLow <- 11
+    lvl2RpeUp <- 11
     
     lvl3WorkLow <- round(df$vt2_work*0.76)
     lvl3WorkUp <- round(df$vt2_work*0.90)
     lvl3HeartrateLow <- round(df$vt2_heartrate*0.84)
     lvl3HeartrateUp <- round(df$vt2_heartrate*0.94)
     lvl3RpeLow <- 11
-    lvl3RpeLow <- 13
+    lvl3RpeUp <- 13
+    
     lvl4WorkLow <- round(df$vt2_work*0.91)
     lvl4WorkUp <- round(df$vt2_work*1.05)
     lvl4HeartrateLow <- round(df$vt2_heartrate*0.95)
     lvl4HeartrateUp <- round(df$vt2_heartrate*1.05)
     lvl4RpeLow <- 13
-    lvl4RpeLow <- 15
+    lvl4RpeUp <- 15
     
     lvl5WorkLow <- round(df$vt2_work*1.06)
     lvl5WorkUp <- round(df$vt2_work*1.2)
     lvl5HeartrateLow <- round(df$vt2_heartrate*1.06)
     lvl5HeartrateUp <- "-"
     lvl5RpeLow <- 15
-    lvl5RpeLow <- 17
+    lvl5RpeUp <- 17
     
     lvl6WorkLow <- round(df$vt2_work*1.21)
     lvl6WorkUp <- "-"
     lvl6HeartrateLow <- "-"
     lvl6HeartrateUp <- "-"
     lvl6RpeLow <- 17
-    lvl6RpeLow <- 19
+    lvl6RpeUp <- 19
     
     lvl7WorkLow <- "-"
     lvl7WorkUp <- "-"
     lvl7HeartrateLow <- "-"
     lvl7HeartrateUp <- "-"
     lvl7RpeLow <- 20
-    lvl7RpeLow <- "-"
+    lvl7RpeUp <- "-"
     
     
     lvl1 <- c(1,"Active Recovery",lvl1WorkLow,lvl1WorkUp,lvl1HeartrateLow,
-              lvl1HeartrateUp,lvl1RpeLow,lvl1RpeLow)
+              lvl1HeartrateUp,lvl1RpeLow,lvl1RpeUp)
     lvl2 <- c(2,"Endurance",lvl2WorkLow,lvl2WorkUp,lvl2HeartrateLow,
-              lvl2HeartrateUp,lvl2RpeLow,lvl2RpeLow)
+              lvl2HeartrateUp,lvl2RpeLow,lvl2RpeUp)
     lvl3 <- c(3,"Tempo",lvl3WorkLow,lvl3WorkUp,lvl3HeartrateLow,lvl3HeartrateUp,
-              lvl3RpeLow,lvl3RpeLow)
+              lvl3RpeLow,lvl3RpeUp)
     lvl4 <- c(4,"Lactate Threshold",lvl4WorkLow,lvl4WorkUp,lvl4HeartrateLow,
-              lvl4HeartrateUp,lvl4RpeLow,lvl4RpeLow)
+              lvl4HeartrateUp,lvl4RpeLow,lvl4RpeUp)
     lvl5 <- c(5,"VO\\textsubscript{2max}",lvl5WorkLow,lvl5WorkUp,
-              lvl5HeartrateLow,lvl5HeartrateUp,lvl5RpeLow,lvl5RpeLow)
+              lvl5HeartrateLow,lvl5HeartrateUp,lvl5RpeLow,lvl5RpeUp)
     lvl6 <- c(6,"Anaerobic Capacity",lvl6WorkLow,lvl6WorkUp,lvl6HeartrateLow,
-              lvl6HeartrateUp,lvl6RpeLow,lvl6RpeLow)
+              lvl6HeartrateUp,lvl6RpeLow,lvl6RpeUp)
     lvl7 <- c(7,"Neuromuscular Power",lvl7WorkLow,lvl7WorkUp,lvl7HeartrateLow,
-              lvl7HeartrateUp,lvl7RpeLow,lvl7RpeLow)
+              lvl7HeartrateUp,lvl7RpeLow,lvl7RpeUp)
     trainingZones <- as.data.frame(rbind(lvl1,lvl2,lvl3,lvl4,lvl5,lvl6,lvl7))
     colnames(trainingZones) <- c("Zone","Intensity","Lower \\par Range",
                             "Upper \\par Range","Lower \\par Range",

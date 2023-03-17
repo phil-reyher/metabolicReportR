@@ -70,19 +70,20 @@ summaryTable %>%
 \fancysection{GXT Data}
 
 ```{r}
-# gxt %>%
-#   mutate(across(everything(),as.character)) %>% 
-#   mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>% 
-#   kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
-#        col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (L/min)",
-#                      "VO\\textsubscript{2} \\par (mL/kg/min)",
-#                     "VO\\textsubscript{2max} \\par (\\%)",
-#                     "Heart Rate \\par (beats/min)",
-#                     "HR\\textsubscript{max} \\par (\\%)") ) %>% 
-#   column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>% 
-#   row_spec(seq(1,nrow(gxt),2), background="#fff3f3") %>% 
-#     kable_styling(latex_options=c("HOLD_position")) %>% 
-#   footnote(number = "Power at the last stage is an approximation relative to the VO\\\\textsubscript{2} achieved.",escape = F)
+gxtTable <- participant$gxtTable
+gxtTable %>%
+  mutate(across(everything(),as.character)) %>%
+  mutate(across(everything(),~paste("\\raisebox{-1pt}{", ., "}")) ) %>%
+  kbl( booktabs = T, escape = FALSE,digits = 1, align = "c",linesep = "",
+       col.names = c("Power \\par (W)","VO\\textsubscript{2} \\par (L/min)",
+                     "VO\\textsubscript{2} \\par (mL/kg/min)",
+                    "VO\\textsubscript{2max} \\par (\\%)",
+                    "Heart Rate \\par (beats/min)",
+                    "HR\\textsubscript{max} \\par (\\%)") ) %>%
+  column_spec(1:6, width = "\\\\dimexpr\\\\textwidth/6\\\\relax") %>%
+  row_spec(seq(1,nrow(gxtTable),2), background="#fff3f3") %>%
+    kable_styling(latex_options=c("HOLD_position")) %>%
+  footnote(number = "Power at the last stage is an approximation relative to the VO\\\\textsubscript{2} achieved.",escape = F)
 ```
 
 \newpage
@@ -110,7 +111,7 @@ cogganTable %>%
 \fancysection{Training Zones - AIS}
 
 ```{r}
-aisTable <- participant$cogganTable
+aisTable <- participant$aisTable
 coln <- colnames(aisTable)
 aisTable %>% 
   tidytable::mutate(across(.cols = everything(),as.character)) %>% 
@@ -127,15 +128,19 @@ aisTable %>%
   column_spec(3:8, width = "\\\\dimexpr11.5\\\\textwidth/100\\\\relax") %>% 
   row_spec(seq(1,nrow(aisTable),2), background="#fff3f3")
 ```
-
-
 \newpage
-\fancysection{Plots}
-
+\fancysection{GXT Plots}
 ```{r, out.width="100%", include=TRUE, fig.align="center"}
 participantName <- participant$participantName
+dir <- here::here("output","plots","gxt_plots")
+filepath <- file.path(dir, paste0(participantName, ".pdf"))
+knitr::include_graphics(filepath, rel_path = F)
+```
+\newpage
+\fancysection{Threshold Plots}
+```{r, out.width="100%", include=TRUE, fig.align="center"}
+
 dir <- here::here("output","plots","threshold_plots")
 filepath <- file.path(dir, paste0(participantName, ".pdf"))
 knitr::include_graphics(filepath, rel_path = F)
-filepath
 ```

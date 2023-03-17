@@ -88,6 +88,3 @@ create_threshold_plots(testData10Binned,changepointsData,
 #################################### Export ####################################
 combinedList <- create_combined_list()
 create_reports(combinedList)
-
-
-

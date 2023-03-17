@@ -97,14 +97,14 @@ create_summary_tables <- function(thresholdsTables,vo2maxTables){
     vtTable$vt1_hrPercentage <- vtTable$vt1_hrPercentage/maxTable$max_heartrate
     vtTable$vt2_hrPercentage <- vtTable$vt2_hrPercentage/maxTable$max_heartrate
     
-    vtTable <- vtTable %>% select(-c(vt1_indexVslope , vt1_indexExCo ,
+    vtTable <- vtTable %>% select(-c(vt1_indexVslope , vt1_indexExCo,
                                      vt2_indexVslope , vt2_indexExVent ))
     vtTable <- cbind(vtTable,maxTable)
     vtTable <- vtTable %>%
      pivot_longer(everything(),names_sep = "_",
                   names_to = c("variable","measurement")) %>%
-     pivot_wider(id_cols =variable, names_from = measurement, values_from = value,
-                 names_repair = "check_unique")
+     pivot_wider(id_cols =variable, names_from = measurement,
+                 values_from = value, names_repair = "check_unique")
     
     out <- vtTable[order(vtTable$vo2abs),]
     out
