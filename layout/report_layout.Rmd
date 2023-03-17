@@ -1,14 +1,11 @@
 ---
 output: 
   pdf_document:
-    keep_tex: true
-    includes: 
-      in-header: "/latex_input/additional_latex_styling.tex"
+    includes:
+      in_header: latex_input/preamble.tex
 ---
 
 ```{r setup, include=FALSE}
-getwd()
-load("list.Rdata")
 options(knitr.table.format = "latex")
 knitr::opts_chunk$set(
 	echo = FALSE,
@@ -39,6 +36,7 @@ meta <- participant$metadata
 ```{r}
 library(tidytable)
 library(kableExtra)
+options(kableExtra.latex.load_packages=T)
 detailsTable <- participant$testDetails
 detailsTable %>% 
   mutate(across(everything(),as.character)) %>% 
