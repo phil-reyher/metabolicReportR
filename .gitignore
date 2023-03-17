@@ -3,8 +3,4 @@
 .RData
 .Ruserdata
 data
-docs
-old data
-plots
-analysis.R
-multipage.pdf
+output
