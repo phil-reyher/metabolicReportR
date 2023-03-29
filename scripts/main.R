@@ -29,7 +29,7 @@ dir <- here::here()
 setwd(dir)
 gxtPlotsPath <- file.path("output","plots","gxt_plots")
 thresholdPlotsPath <- file.path("output","plots","threshold_plots")
-latexPreamblePath <- file.path(here::here(),"layout","latex_input",
+latexPreamblePath <- file.path(dir,"layout","latex_input",
                                "preamble.tex")
 filePath <- file.path("data","single")
 fileList <- list.files(path = filePath, pattern = "*.csv",
