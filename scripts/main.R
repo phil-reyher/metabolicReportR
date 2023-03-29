@@ -34,6 +34,12 @@ latexPreamblePath <- file.path(here::here(),"layout","latex_input",
 filePath <- file.path("data","single")
 fileList <- list.files(path = filePath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
+#yaml-header input for rmarkdown
+outputFormat <- rmarkdown::pdf_document(
+  includes = list(
+    in_header = latexPreamblePath
+  )
+)
 ################################## Functions ###################################
 source(here::here("scripts/functions/0-globalFuns.R"))
 source(here::here("scripts/functions/1-import.R"))

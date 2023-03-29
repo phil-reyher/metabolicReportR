@@ -18,6 +18,7 @@ create_reports <- function(bigList){
       intermediates_dir = "output/intermediates",
       output_file = paste0(participant$participantName,".pdf"),
       output_dir = "finished_reports",
+      output_format = outputFormat,
       clean = TRUE
     )
   })
