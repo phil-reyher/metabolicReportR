@@ -16,7 +16,7 @@ compiled = re.compile(re.escape(subs), re.IGNORECASE)
 
 for i in range(0,len):                                                      #python list index starts at 0
     fpath = os.path.join(path+fnames[i])                            
-    file = xlrd.open_workbook(fpath)             #encoder magic to open shitty xls files
+    file = xlrd.open_workbook(fpath)             #encoder magic to open xls files
     df = pd.read_excel(file,engine="xlrd")                          
     oname[i] =compiled.sub(repl,oname[i])                               #replace filenames so its .csv
     df.to_csv(r'C:/Users/reyhe/Documents/Parvo/Data/Parvo_Report_Single/'+oname[i],index=False)    #exschport
