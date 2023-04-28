@@ -24,6 +24,9 @@ library(gridExtra)
 library(grid)
 library(here)
 library(kableExtra)
+library(tinytex)
+############################## Latex installation ##############################
+tinytex::install_tinytex()
 ############################# Global Vars/Options ##############################
 dir <- here::here()
 setwd(dir)
@@ -31,7 +34,7 @@ gxtPlotsPath <- file.path("output","plots","gxt_plots")
 thresholdPlotsPath <- file.path("output","plots","threshold_plots")
 latexPreamblePath <- file.path(dir,"layout","latex_input",
                                "preamble.tex")
-filePath <- file.path("data","single")
+filePath <- file.path("data")
 fileList <- list.files(path = filePath, pattern = "*.csv",
                         ignore.case = T, full.names = T)
 #yaml-header input for rmarkdown
@@ -94,3 +97,4 @@ create_threshold_plots(testData10Binned,changepointsData,
 #################################### Export ####################################
 combinedList <- create_combined_list()
 create_reports(combinedList)
+
