@@ -10,10 +10,13 @@
 # Last updated:  2022-10-28                                                    #
 # Source:        /metabolic_reportR/scripts/                                   #
 #                                                                              #
-# Comment:       Script aims to automise the creation of plots using the Parvo #
+# Comment:       Script aims to automate the creation of plots using the Parvo #
 #                Metabolic Cart data                                           #
 #                                                                              #
 ################################################################################
+############################## ONLY RUN THIS ONCE ##############################
+library(tinytex)
+tinytex::install_tinytex()
 ################################### Packages ###################################
 library(purrr)
 library(data.table)
@@ -24,9 +27,6 @@ library(gridExtra)
 library(grid)
 library(here)
 library(kableExtra)
-library(tinytex)
-############################## Latex installation ##############################
-tinytex::install_tinytex()
 ############################# Global Vars/Options ##############################
 dir <- here::here()
 setwd(dir)
