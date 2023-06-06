@@ -22,10 +22,10 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList,
       annotate(x=df$time[meta$endExerciseIndex],y=+Inf,
               label="Cooldown",vjust=2,geom="label")+
       
-      geom_line(aes(y=vo2absLow,group=1, colour='VO2'))+
+      geom_line(aes(y=vo2absFilt,group=1, colour='VO2'))+
       guides(color = guide_legend(override.aes = list(size = 1.5)))+
       labs(color="Measurement")+
-      geom_line(aes(y=vco2Low,group=2, colour='VCO2'))+
+      geom_line(aes(y=vco2Filt,group=2, colour='VCO2'))+
       geom_area(aes(y = (work/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
       scale_color_manual(name='Measurement',
                         breaks=c('VO2', 'VCO2', 'VO2', 'WORK'),

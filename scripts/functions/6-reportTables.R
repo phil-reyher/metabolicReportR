@@ -33,7 +33,7 @@ create_gxt_table <- function(dataList,vo2maxDataList){
     df <- df %>% slice(1:which.max(df$work))
     work <- df$work
     #select columns to loop through
-    df <- df %>% select(vo2absLow,vo2relLow,vo2maxPercentage,heartrate,
+    df <- df %>% select(vo2absFilt,vo2relFilt,vo2maxPercentage,heartrate,
                  hrmaxPercentage)
     #loop through columns, for linear models
     resultsList <- lapply(df, function(vec){
@@ -46,8 +46,8 @@ create_gxt_table <- function(dataList,vo2maxDataList){
     work <- seq(100,max(work),by=25 )
     gxtTable <- cbind(work,gxtTable)
     #exchange last row with values of VO2MAX
-    maxTable <- maxTable %>% select('work'=max_work,'vo2absLow'=max_vo2abs,
-                          'vo2relLow'=max_vo2rel,
+    maxTable <- maxTable %>% select('work'=max_work,'vo2absFilt'=max_vo2abs,
+                          'vo2relFilt'=max_vo2rel,
                           'vo2maxPercentage'=max_vo2Percentage,
                           'heartrate'=max_heartrate,
                           'hrmaxPercentage'=max_hrPercentage)
@@ -59,7 +59,7 @@ create_gxt_table <- function(dataList,vo2maxDataList){
       mutate(across(ends_with("percentage",ignore.case = T),
                     ~round(.*100,digits = 0))) %>% 
       mutate(across(c("work","heartrate"),~round(.,digits = 0)) ) %>% 
-      mutate(across(c("vo2absLow","vo2relLow"),~format(round(.,digits = 1)
+      mutate(across(c("vo2absFilt","vo2relFilt"),~format(round(.,digits = 1)
                                                            ,nsmall = 1)) )
     gxtTable
   })

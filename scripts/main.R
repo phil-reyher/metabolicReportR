@@ -69,8 +69,10 @@ testData <- tidy_up(testData)
 metadata <- extract_start_end_indices(extractFrom = testData,
                                        appendTo = metadata)
 ################################ Preprocessing #################################
-#filtering
+#IMPORTANT - CHOOSE ONE FILTER AND ONLY EXECUTE THAT LINE;
+#THE FILTERS OVERWRITE EACH OTHER
 testData <- apply_low_pass_filter(testData)
+testData <- apply_moving_average_filter(testData)
 #variable computation
 testData <- compute_ventilatory_vars(testData)
 #Truncation
