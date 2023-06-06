@@ -72,7 +72,7 @@ metadata <- extract_start_end_indices(extractFrom = testData,
 #IMPORTANT - CHOOSE ONE FILTER AND ONLY EXECUTE THAT LINE;
 #THE FILTERS OVERWRITE EACH OTHER
 testData <- apply_low_pass_filter(testData)
-testData <- apply_moving_average_filter(testData)
+testData <- apply_moving_average_filter(testData,k = 15)
 #variable computation
 testData <- compute_ventilatory_vars(testData)
 #Truncation

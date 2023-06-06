@@ -17,25 +17,25 @@ apply_low_pass_filter <- function(dataList){
 return(filteredData)
 }
 
-apply_moving_average_filter <- function(dataList){
-  filteredData <- lapply(dataList,function(df) {
-    f15 <- rep(1/15,15)
-    df$vo2absFilt <- stats::filter(df$vo2abs, f15, method = "convolution",
+apply_moving_average_filter <- function(dataList,k){
+  filteredData <- lapply(dataList,function(df,...) {
+    f <- rep(1/k,k)
+    df$vo2absFilt <- stats::filter(df$vo2abs, f, method = "convolution",
                                sides = 2, circular = TRUE)
     
-    df$vo2relFilt <- stats::filter(df$vo2rel, f15, method = "convolution",
+    df$vo2relFilt <- stats::filter(df$vo2rel, f, method = "convolution",
                                    sides = 2, circular = TRUE)
     
-    df$vco2Filt <- stats::filter(df$vco2, f15, method = "convolution",
+    df$vco2Filt <- stats::filter(df$vco2, f, method = "convolution",
                                    sides = 2, circular = TRUE)
     
-    df$veFilt <- stats::filter(df$ve, f15, method = "convolution",
+    df$veFilt <- stats::filter(df$ve, f, method = "convolution",
                                    sides = 2, circular = TRUE)
     
-    df$vevo2Filt <- stats::filter(df$vevo2, f15, method = "convolution",
+    df$vevo2Filt <- stats::filter(df$vevo2, f, method = "convolution",
                                    sides = 2, circular = TRUE)
     
-    df$vevco2Filt <- stats::filter(df$vevco2, f15, method = "convolution",
+    df$vevco2Filt <- stats::filter(df$vevco2, f, method = "convolution",
                                   sides = 2, circular = TRUE)
     df
   })
