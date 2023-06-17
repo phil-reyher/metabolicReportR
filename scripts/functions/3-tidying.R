@@ -49,8 +49,8 @@ extract_start_end_indices <- function(extractFrom,appendTo){
     FUN= function(df,meta){
     startExercise <- as.numeric(meta$startExercise)*60
     endExercise <- as.numeric(meta$endExercise)*60
-     beg <- which.max(df$time >= startExercise)
-    end <- which.max(df$time >= endExercise)
+     beg <- which.min(abs(df$time - startExercise))
+    end <- which.min(abs(df$time - endExercise))
     meta$startExerciseIndex <- beg
     meta$endExerciseIndex <- end
     meta
