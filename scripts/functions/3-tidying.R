@@ -33,7 +33,7 @@ tidy_up <- function(dataList){
     ##convert time from m:s format to s
     df$time <- mmss_to_ss(df$time)
     ##convert all to numeric, to character first to preserve factors
-    df <-df %>% mutate(across(.cols = everything(), ~ as.character(.x) %>% 
+    df <- df %>% mutate(across(.cols = everything(), ~ as.character(.x) %>% 
                                 as.numeric(.x) ) )
     ##rename problematic column names
     df <- df %>% rename('vevo2'=`ve/vo2`,'vevco2'=`ve/vco2`)
