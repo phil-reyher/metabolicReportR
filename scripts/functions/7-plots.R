@@ -29,10 +29,13 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList,
       annotate(x=df$time[meta$endExerciseIndex],y=0.5,
                label="Cooldown",vjust=2,geom="label")+
       
-      scale_y_continuous(name="VO2 | VCO2 (l/min)", breaks=seq(10,45,5),
-                         sec.axis = sec_axis(~.*100,name='Work' ) )+
+      scale_y_continuous(name="VO2 | VCO2 (l/min)",
+                         breaks = seq(0,10, by = 0.5),
+                         sec.axis = sec_axis(~.*100,name= 'Work (W)',
+                                             breaks = seq(0, 1000, by = 50) ))+
       scale_x_time(name = "Time (mm:ss)", breaks = seq(0,
-                                               max(df$time), by = 60))+
+                                               max(df$time), by = 60),
+                   labels = scales::label_time(format = '%M:%S'))+
       theme_bw()+
       scale_color_manual(name='Measurement',
                         breaks=c('VO2', 'VCO2','Work'),
