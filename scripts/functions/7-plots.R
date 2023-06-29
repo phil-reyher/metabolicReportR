@@ -28,9 +28,10 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList,
       geom_vline(xintercept = df$time[meta$endExerciseIndex],linetype = "dashed")+
       annotate(x=df$time[meta$endExerciseIndex],y=0.5,
                label="Cooldown",vjust=2,geom="label")+
-      scale_y_continuous(name="VO2 | VCO2", breaks=seq(10,45,5),
+      
+      scale_y_continuous(name="VO2 | VCO2 (l/min)", breaks=seq(10,45,5),
                          sec.axis = sec_axis(~.*100,name='Work' ) )+
-      scale_x_time(name = "Time", breaks = seq(0,
+      scale_x_time(name = "Time (mm:ss)", breaks = seq(0,
                                                max(df$time), by = 60))+
       theme_bw()+
       scale_color_manual(name='Measurement',
