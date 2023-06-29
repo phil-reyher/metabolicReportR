@@ -12,8 +12,8 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList,
       labs(color="Measurement")+
       geom_line(aes(y=vco2Filt,group=2, colour='VCO2'))+
       geom_line(aes(y=vo2absFilt,group=1, colour='VO2'))+
-      geom_vline(xintercept = vt$vt1_time)+
       
+      geom_vline(xintercept = vt$vt1_time)+
       annotate(x=vt$vt1_time,y=0.5,
                label="GET",vjust=2,geom="label")+
       
