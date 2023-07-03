@@ -6,30 +6,40 @@ create_gxt_plots <- function(dataList,metadataList,vtDataList,
   function(df,meta,vt,name,path){
     
     plot <-  ggplot(df,aes(x=time))+
-      geom_vline(xintercept = vt$vt1_time)+
-      annotate(x=vt$vt1_time,y=+Inf,
-              label="VT1",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = vt$vt2_time)+
-      annotate(x=vt$vt2_time,y=+Inf,
-              label="VT2",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = df$time[meta$startExerciseIndex])+
-      annotate(x=df$time[meta$startExerciseIndex],y=+Inf,
-              label="Start",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = df$time[meta$endExerciseIndex])+
-      annotate(x=df$time[meta$endExerciseIndex],y=+Inf,
-              label="Cooldown",vjust=2,geom="label")+
-      
-      geom_line(aes(y=vo2absLow,group=1, colour='VO2'))+
+      geom_line(aes(y=(work/100),group=3, colour='Work'))+
+      geom_area(aes(y = (work/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
       guides(color = guide_legend(override.aes = list(size = 1.5)))+
       labs(color="Measurement")+
-      geom_line(aes(y=vco2Low,group=2, colour='VCO2'))+
-      geom_area(aes(y = (work/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
+      geom_line(aes(y=vco2Filt,group=2, colour='VCO2'))+
+      geom_line(aes(y=vo2absFilt,group=1, colour='VO2'))+
+      
+      geom_vline(xintercept = vt$vt1_time)+
+      annotate(x=vt$vt1_time,y=0.5,
+               label="GET",vjust=2,geom="label")+
+      
+      geom_vline(xintercept = vt$vt2_time,)+
+      annotate(x=vt$vt2_time,y=0.5,
+               label="RCP",vjust=2,geom="label")+
+      
+      geom_vline(xintercept = df$time[meta$startExerciseIndex],linetype = "dashed")+
+      annotate(x=df$time[meta$startExerciseIndex],y=0.5,
+               label="Start",vjust=2,geom="label")+
+      
+      geom_vline(xintercept = df$time[meta$endExerciseIndex],linetype = "dashed")+
+      annotate(x=df$time[meta$endExerciseIndex],y=0.5,
+               label="Cooldown",vjust=2,geom="label")+
+      
+      scale_y_continuous(name="VO2 | VCO2 (l/min)",
+                         breaks = seq(0,10, by = 0.5),
+                         sec.axis = sec_axis(~.*100,name= 'Work (W)',
+                                             breaks = seq(0, 1000, by = 50) ))+
+      scale_x_time(name = "Time (mm:ss)", breaks = seq(0,
+                                               max(df$time), by = 60),
+                   labels = scales::label_time(format = '%M:%S'))+
+      theme_bw()+
       scale_color_manual(name='Measurement',
-                        breaks=c('VO2', 'VCO2', 'VO2', 'WORK'),
-                        values=c('VO2'='green', 'VCO2'='red', 'WORK'='blue'))
+                        breaks=c('VO2', 'VCO2','Work'),
+                        values=c('VO2'='green', 'VCO2'='red', 'Work'='lightblue'))
     plot
     save_plot_named_as_to(plot = plot,name = name,path = path)
   })

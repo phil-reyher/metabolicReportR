@@ -104,8 +104,8 @@ findchangepts_var <- function(x) {
 ########################### Predict work, linear model #########################
 predict_work <- function(df,vo2Val){
   df <- df %>% slice(1:which.max(df$work))
-  model <- lm(work ~ vo2absLow,data = df)
-  new_observations <- data.frame(vo2absLow=vo2Val)
+  model <- lm(work ~ vo2absFilt,data = df)
+  new_observations <- data.frame(vo2absFilt=vo2Val)
   predicted_vals <- predict(model,newdata = new_observations)
   return(predicted_vals)
 }

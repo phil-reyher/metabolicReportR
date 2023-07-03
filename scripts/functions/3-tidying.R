@@ -33,7 +33,7 @@ tidy_up <- function(dataList){
     ##convert time from m:s format to s
     df$time <- mmss_to_ss(df$time)
     ##convert all to numeric, to character first to preserve factors
-    df <-df %>% mutate(across(.cols = everything(), ~ as.character(.x) %>% 
+    df <- df %>% mutate(across(.cols = everything(), ~ as.character(.x) %>% 
                                 as.numeric(.x) ) )
     ##rename problematic column names
     df <- df %>% rename('vevo2'=`ve/vo2`,'vevco2'=`ve/vco2`)
@@ -49,8 +49,8 @@ extract_start_end_indices <- function(extractFrom,appendTo){
     FUN= function(df,meta){
     startExercise <- as.numeric(meta$startExercise)*60
     endExercise <- as.numeric(meta$endExercise)*60
-     beg <- which.max(df$time >= startExercise)
-    end <- which.max(df$time >= endExercise)
+     beg <- which.min(abs(df$time - startExercise))
+    end <- which.min(abs(df$time - endExercise))
     meta$startExerciseIndex <- beg
     meta$endExerciseIndex <- end
     meta

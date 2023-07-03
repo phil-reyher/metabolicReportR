@@ -2,19 +2,44 @@
 apply_low_pass_filter <- function(dataList){
   filteredData <- lapply(dataList,function(df) {
     bf <- butter(3, 0.04, type= 'low')
-    df$vo2absLow <- signal::filtfilt(bf, df$vo2abs)
-    df$vo2relLow <- signal::filtfilt(bf, df$vo2rel)
+    df$vo2absFilt <- signal::filtfilt(bf, df$vo2abs)
+    df$vo2relFilt <- signal::filtfilt(bf, df$vo2rel)
     
-    df$vco2Low <- signal::filtfilt(bf, df$vco2)
+    df$vco2Filt <- signal::filtfilt(bf, df$vco2)
     
-    df$veLow <- signal::filtfilt(bf, df$ve)
+    df$veFilt <- signal::filtfilt(bf, df$ve)
     
-    df$vevo2Low <- signal::filtfilt(bf, df$vevo2)
+    df$vevo2Filt <- signal::filtfilt(bf, df$vevo2)
     
-    df$vevco2Low <- signal::filtfilt(bf, df$vevco2)
+    df$vevco2Filt <- signal::filtfilt(bf, df$vevco2)
     df
   })
 return(filteredData)
+}
+
+apply_moving_average_filter <- function(dataList,k){
+  filteredData <- lapply(dataList,function(df,...) {
+    f <- rep(1/k,k)
+    df$vo2absFilt <- stats::filter(df$vo2abs, f, method = "convolution",
+                               sides = 2, circular = TRUE)
+    
+    df$vo2relFilt <- stats::filter(df$vo2rel, f, method = "convolution",
+                                   sides = 2, circular = TRUE)
+    
+    df$vco2Filt <- stats::filter(df$vco2, f, method = "convolution",
+                                   sides = 2, circular = TRUE)
+    
+    df$veFilt <- stats::filter(df$ve, f, method = "convolution",
+                                   sides = 2, circular = TRUE)
+    
+    df$vevo2Filt <- stats::filter(df$vevo2, f, method = "convolution",
+                                   sides = 2, circular = TRUE)
+    
+    df$vevco2Filt <- stats::filter(df$vevco2, f, method = "convolution",
+                                  sides = 2, circular = TRUE)
+    df
+  })
+  return(filteredData)
 }
 
 ######################## Compute Ventilatory Variables #########################
@@ -25,7 +50,7 @@ compute_ventilatory_vars <- function(dataList){
     #no forgetti removi!!!
     df$heartrate <- 100
     ###################
-    df$vo2maxPercentage <- df$vo2relLow/max(df$vo2relLow)
+    df$vo2maxPercentage <- df$vo2relFilt/max(df$vo2relFilt)
     df$hrmaxPercentage <- df$heartrate/max(df$heartrate)
     df
   })

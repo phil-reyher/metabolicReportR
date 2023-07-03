@@ -34,10 +34,10 @@ find_ventilatory_thresholds_data <- function(dataList){
     #´_´ seperator for pivot longer later
     vt1_time <- df$time[vt1_index]
     vt2_time <- df$time[vt2_index]
-    vt1_vo2abs <- df$vo2absLow[vt1_index]
-    vt2_vo2abs <- df$vo2absLow[vt2_index]
-    vt1_vo2rel <- df$vo2relLow[vt1_index]
-    vt2_vo2rel <- df$vo2relLow[vt2_index]
+    vt1_vo2abs <- df$vo2absFilt[vt1_index]
+    vt2_vo2abs <- df$vo2absFilt[vt2_index]
+    vt1_vo2rel <- df$vo2relFilt[vt1_index]
+    vt2_vo2rel <- df$vo2relFilt[vt2_index]
     
     vt1_work <- predict_work(df,vt1_vo2abs)
     vt2_work <- predict_work(df,vt2_vo2abs)
@@ -66,10 +66,10 @@ return(thresholdsTables)
 ############################# Extract VO2Max data ##############################
 find_vo2max_data <- function(dataList){
   vo2maxTables <- lapply(dataList, function(df){
-    max_index <- which.max(df$vo2absLow)
+    max_index <- which.max(df$vo2absFilt)
     max_time <- df$time[max_index]
-    max_vo2abs <- max(df$vo2absLow)
-    max_vo2rel <- max(df$vo2relLow)
+    max_vo2abs <- max(df$vo2absFilt)
+    max_vo2rel <- max(df$vo2relFilt)
     max_work <- predict_work(df,max_vo2abs)
     max_heartrate <- max(df$heartrate)
     

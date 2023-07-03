@@ -7,7 +7,7 @@
 # Client:        Philipp Reyher                                                #
 #                                                                              #
 # Code created:  2022-10-28                                                    #
-# Last updated:  2022-04-28                                                    #
+# Last updated:  2023-06-06                                                    #
 # Source:        /metabolic_reportR/scripts/                                   #
 #                                                                              #
 # Comment:       Script aims to automate the creation of plots using the Parvo #
@@ -69,8 +69,10 @@ testData <- tidy_up(testData)
 metadata <- extract_start_end_indices(extractFrom = testData,
                                        appendTo = metadata)
 ################################ Preprocessing #################################
-#filtering
+#IMPORTANT - CHOOSE ONE FILTER AND ONLY EXECUTE THAT LINE;
+#THE FILTERS OVERWRITE EACH OTHER
 testData <- apply_low_pass_filter(testData)
+testData <- apply_moving_average_filter(testData,k = 15)
 #variable computation
 testData <- compute_ventilatory_vars(testData)
 #Truncation
