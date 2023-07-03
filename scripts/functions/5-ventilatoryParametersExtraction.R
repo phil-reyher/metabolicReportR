@@ -12,17 +12,17 @@ find_ventilatory_thresholds_data <- function(dataList){
     ##VT1##
     ##V-Slope##
     vSlope <- dfVt1 %>% select(vo2abs,vco2) %>% as.matrix(.) %>% t(.)
-    vSlopeIndex <- findchangepts_std(vSlope)+vt1IndexStart-1
+    vSlopeIndex <- findchangepts_var(vSlope)+vt1IndexStart-1
     #EXCO2##
     excessCo2 <- dfVt1 %>% select(exco2) %>% as.matrix(.) %>% t(.)
-    excessCo2Index <- findchangepts_std(excessCo2)+vt1IndexStart-1
+    excessCo2Index <- findchangepts_var(excessCo2)+vt1IndexStart-1
     ##VT2##
     ##V-Slope##
     vSlope2 <- dfVt2 %>% select(vco2,ve) %>% as.matrix(.) %>% t(.)
-    vSlope2Index <- findchangepts_std(vSlope2)+vt2IndexStart-1
+    vSlope2Index <- findchangepts_var(vSlope2)+vt2IndexStart-1
     ##EXVE##
     excessVentilation <- dfVt2 %>% select(exve) %>% as.matrix(.) %>% t(.)
-    excessVentIndex <- findchangepts_std(excessVentilation)+
+    excessVentIndex <- findchangepts_var(excessVentilation)+
                               vt2IndexStart-1
     ##combine
     vt1_indexVslope <- vSlopeIndex
